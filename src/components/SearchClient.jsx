@@ -1,4 +1,5 @@
 import TextField from "@mui/material/TextField";
+import { isMacOs } from "react-device-detect";
 
 import { ReactComponent as Search } from "../icons/searchIcon.svg";
 import cs from "../utils/class";
@@ -12,7 +13,11 @@ function SearchClient({ className }) {
       )}
     >
       <Search width={32} height={32} />
-      <TextField className="w-[33vw] min-w-[300px]" sx={SearchSx} />
+      <TextField
+        className="w-[33vw] min-w-[300px]"
+        placeholder={`${isMacOs ? "" : "ctrl"} + k`}
+        sx={SearchSx(isMacOs ? "macos" : "")}
+      />
     </div>
   );
 }
