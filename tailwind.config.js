@@ -14,6 +14,7 @@ module.exports = {
         primary: "rgba(var(--primary))",
         secondary: "rgba(var(--secondary))",
         highlight: "rgba(var(--highlight)) !important",
+        blend: "rgba(var(--blend))",
       },
     },
   },
