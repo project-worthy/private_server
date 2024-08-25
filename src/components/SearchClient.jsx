@@ -4,7 +4,25 @@ import { isMacOs } from "react-device-detect";
 import { ReactComponent as Search } from "../icons/searchIcon.svg";
 import cs from "../utils/class";
 import { SearchSx } from "../utils/theme";
+import { useKeyCode, usePreventKeyCode } from "../hooks";
+import { useEffect, useRef } from "react";
+
 function SearchClient({ className }) {
+  const cmdKDown = useKeyCode(75, { meta: true });
+  const escDown = useKeyCode(27);
+  const textFieldRef = useRef(null);
+  useEffect(() => {
+    if (cmdKDown) {
+      textFieldRef.current.focus();
+    }
+  }, [cmdKDown]);
+
+  useEffect(() => {
+    if (escDown) {
+      textFieldRef.current.blur();
+      textFieldRef.current.value = "";
+    }
+  }, [escDown]);
   return (
     <div
       className={cs.join(
@@ -17,6 +35,7 @@ function SearchClient({ className }) {
         className="w-[33vw] min-w-[300px]"
         placeholder={`${isMacOs ? "" : "ctrl"} + k`}
         sx={SearchSx(isMacOs ? "macos" : "")}
+        inputRef={textFieldRef}
       />
     </div>
   );

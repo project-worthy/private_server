@@ -1,50 +1,38 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import DevicesMap from "../components/DevicesMap";
+import { DevicesContext } from "../components/DevicesProvider";
 import SearchClient from "../components/SearchClient";
+import WattUsage from "../components/WattUsage";
 import cs from "../utils/class";
-import Draggable from "react-draggable";
+
 function Home() {
-  const [popWidth, setPopWidth] = useState(0);
-  const [initSize, setInitSize] = useState({ x: 0, y: 0 });
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const dragRef = useRef();
+  const [popWidth, setPopWidth] = useState(50);
+  const { devices } = useContext(DevicesContext);
+  console.log(devices);
+
+  const gridRadius = 2;
   useEffect(() => {
-    let x = Math.floor(-dragRef.current.offsetWidth / 2);
-    let y = Math.floor(-dragRef.current.offsetHeight / 2);
-    x = x - (x % 20);
-    y = y - (y % 20);
-    setPos({
-      x,
-      y,
-    });
-    setInitSize({
-      x,
-      y,
-    });
+    document.documentElement.style.setProperty("--d", `${gridRadius}px`);
   }, []);
 
-  const onStop = (e, data) => {
-    setPos({
-      x: initSize.x + (data.x % 20),
-      y: initSize.y + (data.y % 20),
-    });
-  };
   return (
     <div className="w-lvw h-lvh overflow-hidden">
       <div className="w-full h-full flex justify-center fixed z-10 pointer-events-none">
         <div className="flex-grow flex justify-center mt-10">
           <SearchClient className="pointer-events-auto" />
         </div>
-        <div className={cs.join(`w-[${popWidth}vw]`, " p-5 transition-all")}>
-          <div className="rounded-xl bg-blend h-full w-full"></div>
-          {/*devices information is going to go*/}
-        </div>
+        {popWidth > 0 && (
+          <div
+            className={cs.join("p-5 transition-all pointer-events-auto")}
+            style={{ width: `${popWidth}vw` }}
+          >
+            <div className="rounded-xl bg-blend h-full w-full">
+              <WattUsage />
+            </div>
+          </div>
+        )}
       </div>
-      <Draggable nodeRef={dragRef} onStop={onStop} position={pos}>
-        <div
-          className="dot-grid bg-[0 0 / 20px 20px] w-[300vw] h-[300vh]"
-          ref={dragRef}
-        ></div>
-      </Draggable>
+      <DevicesMap deviceArray={devices} gridRadius={gridRadius} />
     </div>
   );
 }
