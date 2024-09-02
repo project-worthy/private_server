@@ -62,3 +62,10 @@ export const SearchSx = (type) => {
     },
   };
 };
+
+export const IconSx = {
+  fill: "rgba(var(--secondary),0.5)",
+  "&:hover": {
+    fill: "rgba(var(--secondary))",
+  },
+};

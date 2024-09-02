@@ -2,7 +2,7 @@ import Draggable from "react-draggable";
 import Devices from "./Devices";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-export default function DevicesMap({ deviceArray, gridRadius }) {
+export default function DevicesMap({ deviceArray, gridRadius, openPopup }) {
   const [totalDragSize, setTotalDragSize] = useState({ x: 0, y: 0 });
   // 20 사이즈 맞추기 위해서 사용하는 애
 
@@ -94,21 +94,28 @@ export default function DevicesMap({ deviceArray, gridRadius }) {
     };
   }, [gridAlignOffset, totalDragSize, deviceMapBBox]);
 
+  const handleClickDevice = (e) => {
+    console.log(e);
+    openPopup();
+  };
+
   return (
     <Draggable nodeRef={dragRef} onStop={onStop} position={gridAlignOffset}>
       <div className="dot-grid w-[300vw] h-[300vh] relative" ref={dragRef}>
         {deviceArray?.map((device, idx) => {
           return (
             <Devices
-              name={device.name}
-              tag={device.tag}
-              devicePos={{
-                x: device?.position?.x ?? 0,
-                y: device?.position?.y ?? 0,
-              }} // 디바이스 좌표(0,0 기준) dosn't change
+              // name={device.name}
+              // tag={device.tag}
+              // devicePos={{
+              //   x: device?.position?.x ?? 0,
+              //   y: device?.position?.y ?? 0,
+              // }}
+              device={device}
               deviceMapBBox={deviceMapBBox}
               offset={offset}
               key={`devices-${idx}`}
+              onClick={handleClickDevice}
             />
           );
         })}

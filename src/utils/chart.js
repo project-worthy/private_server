@@ -1,4 +1,4 @@
-const Utils = {};
+export const Utils = {};
 
 /**
  * count:
@@ -32,6 +32,19 @@ Utils.month = function (options) {
   return result;
 };
 
+Utils.hours = function (options) {
+  const count = options?.count ?? 24;
+  const start = (options?.start ?? 1) - 1;
+
+  const data = Array.from({ length: count }, (_, i) => ((i + start) % 24) + 1);
+
+  return data;
+};
+
+Utils.week = function (options) {};
+
+Utils.year = function (options) {};
+
 Utils.number = function (options) {
   const count = options?.count ?? 12;
   const random = options?.random ?? false;
@@ -45,5 +58,3 @@ Utils.number = function (options) {
     );
   return result;
 };
-
-export default Utils;

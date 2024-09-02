@@ -6,14 +6,16 @@ import WattUsage from "../components/WattUsage";
 import cs from "../utils/class";
 
 function Home() {
-  const [popWidth, setPopWidth] = useState(50);
+  const [popWidth, setPopWidth] = useState(0);
   const { devices } = useContext(DevicesContext);
-  console.log(devices);
 
   const gridRadius = 2;
   useEffect(() => {
     document.documentElement.style.setProperty("--d", `${gridRadius}px`);
   }, []);
+
+  const openPopup = () => setPopWidth(50);
+  const closePopup = () => setPopWidth(0);
 
   return (
     <div className="w-lvw h-lvh overflow-hidden">
@@ -24,15 +26,20 @@ function Home() {
         {popWidth > 0 && (
           <div
             className={cs.join("p-5 transition-all pointer-events-auto")}
-            style={{ width: `${popWidth}vw` }}
+            style={{ width: `${popWidth}vw`, maxWidth: "500px" }}
           >
             <div className="rounded-xl bg-blend h-full w-full">
-              <WattUsage />
+              <WattUsage closePopup={closePopup} />
             </div>
           </div>
         )}
       </div>
-      <DevicesMap deviceArray={devices} gridRadius={gridRadius} />
+      <DevicesMap
+        deviceArray={devices}
+        gridRadius={gridRadius}
+        openPopup={openPopup}
+        closePopup={closePopup}
+      />
     </div>
   );
 }
