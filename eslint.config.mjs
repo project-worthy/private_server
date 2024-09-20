@@ -40,9 +40,25 @@ export default [
     rules: {
       "react/react-in-jsx-scope": "off",
       semi: "error",
-      "no-unused-vars": [
-        "warn",
-        { vars: "all", args: "after-used", ignoreRestSiblings: false },
+      // "no-unused-vars": [
+      //   "warn",
+      //   {
+      //     vars: "all",
+      //     args: "after-used",
+      //     ignoreRestSiblings: false,
+      //   },
+      // ],
+
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn", // or "error"
+        {
+          vars: "all",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
     },
   },
