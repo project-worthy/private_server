@@ -1,19 +1,30 @@
-import AddVariableIcon from "@mui/icons-material/Add";
+import { useState } from "react";
 
-import dayjs, { locale } from "dayjs";
+import { locale } from "dayjs";
 
 import { Box } from "components/layouts";
-import { getTimeRatio } from "utils/date";
 
-import TimeScheduler from "./TimeScheduler";
+import TimeScheduler, { TimeSchedulerType } from "./TimeScheduler";
 
 locale("ko");
 
-const timeNumber: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
-export default function TimeLine() {
-  console.log(getTimeRatio(dayjs("2024-09-25 24:0:0")));
+const dummyData: TimeSchedulerType[] = [
+  {
+    name: "디바이스 1",
+    macAddress: "00:00:00:00:00",
+    activeTimes: [{ start: [0, 0, 0], end: [3, 0, 0] }],
+  },
+  {
+    name: "디바이스 2",
+    macAddress: "00:00:00:00:00",
+    activeTimes: [{ start: [0, 0, 0], end: [3, 0, 0] }],
+  },
+];
 
-  console.log(dayjs("2024-09-25 24:0:0").format("YYYY-MM-DD HH:mm:ss"));
+const timeNumber: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
+
+export default function TimeLine() {
+  const [data, _] = useState(dummyData);
   return (
     <>
       <Box className="h-full " items="start">
@@ -30,7 +41,9 @@ export default function TimeLine() {
                 ))}
               </div>
               <div className="h-12">
-                <TimeScheduler />
+                {data.map((d, i) => (
+                  <TimeScheduler data={d} key={`time-scheduler-${i}`} />
+                ))}
               </div>
             </div>
           </div>
