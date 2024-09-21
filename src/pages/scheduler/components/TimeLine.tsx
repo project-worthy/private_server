@@ -8,23 +8,17 @@ import TimeScheduler, { TimeSchedulerType } from "./TimeScheduler";
 
 locale("ko");
 
-const dummyData: TimeSchedulerType[] = [
-  {
-    name: "디바이스 1",
-    macAddress: "00:00:00:00:00",
-    activeTimes: [{ start: [0, 0, 0], end: [3, 0, 0] }],
-  },
-  {
-    name: "디바이스 2",
-    macAddress: "00:00:00:00:00",
-    activeTimes: [{ start: [0, 0, 0], end: [3, 0, 0] }],
-  },
-];
+const timeWidth = 64;
 
 const timeNumber: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
 
-export default function TimeLine() {
-  const [data, _] = useState(dummyData);
+type TimeLineProps = {
+  dataSource: TimeSchedulerType[];
+};
+
+export default function TimeLine(props: TimeLineProps) {
+  const { dataSource } = props;
+  // const [dataSource, _] = useState(dataSource);
   return (
     <>
       <Box className="h-full " items="start">
@@ -33,7 +27,11 @@ export default function TimeLine() {
             <div className="w-full ml-[25%]">
               <div className="inline-flex">
                 {timeNumber.map((v) => (
-                  <div className="w-16 h-5 relative " key={"time" + v}>
+                  <div
+                    className=" h-5 relative "
+                    key={"time" + v}
+                    style={{ width: timeWidth }}
+                  >
                     <span className="absolute right-0 translate-x-1/2 bg-background">
                       {v}
                     </span>
@@ -41,29 +39,13 @@ export default function TimeLine() {
                 ))}
               </div>
               <div className="h-12">
-                {data.map((d, i) => (
+                {dataSource.map((d, i) => (
                   <TimeScheduler data={d} key={`time-scheduler-${i}`} />
                 ))}
               </div>
             </div>
           </div>
         </div>
-
-        {/* <Paper className="w-1/4" elevation={0}> */}
-        {/*   {dummyData.map((data) => { */}
-        {/*     return <Box>a</Box>; */}
-        {/*   })} */}
-        {/*   <Box> */}
-        {/*     <IconButton aria-label="add"> */}
-        {/*       <AddVariableIcon /> */}
-        {/*     </IconButton> */}
-        {/*   </Box> */}
-        {/* </Paper> */}
-        {/* <Paper className="flex-1" elevation={0}> */}
-        {/*   {dummyData.map((data) => { */}
-        {/*     return <Box>a</Box>; */}
-        {/*   })} */}
-        {/* </Paper> */}
       </Box>
     </>
   );

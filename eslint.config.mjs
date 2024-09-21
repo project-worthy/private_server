@@ -60,6 +60,14 @@ export default [
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+      "no-shadow": "off",
+      "@typescript-eslint/no-shadow": [
+        "error",
+        {
+          ignoreTypeValueShadow: true,
+          ignoreFunctionTypeParameterNameValueShadow: true,
+        },
+      ],
     },
   },
   {
