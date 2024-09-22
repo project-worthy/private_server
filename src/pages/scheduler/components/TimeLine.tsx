@@ -11,7 +11,7 @@ locale("ko");
 
 const timeWidth = 64;
 
-const timeNumber: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
+const timeNumber: number[] = Array.from({ length: 25 }, (_, i) => i);
 
 type TimeLineProps = {
   dataSource: TimeSchedulerType[];

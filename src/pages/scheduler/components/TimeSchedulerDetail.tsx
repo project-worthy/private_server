@@ -11,6 +11,7 @@ type TimeSchedulerDetailProp = {
   timeWidth?: number;
 };
 
+const timeNumber: number[] = Array.from({ length: 25 }, (_, i) => i);
 export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const { data, timeWidth: _timeWidth } = props;
   const timeWidth = _timeWidth ?? 64;
@@ -43,10 +44,20 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   const handleDateClose = () => setOpenDateAnchorEl(undefined);
   return (
-    <>
+    <div className="h-[inherit] relative mb-2">
+      <div className="flex h-[inherit] absolute">
+        {/* 이거 이제 버튼 누르면 새 스케줄 생성하는 형식으로 변경 */}
+        {timeNumber.map((e, i) => (
+          <div
+            key={i}
+            style={{ height: "inherit", width: timeWidth }}
+            className="hover:bg-highlight"
+          ></div>
+        ))}
+      </div>
       {data.activeTimes.map((d, i) => (
         <div
-          className="h-[inherit] relative mb-2"
+          className=" h-[inherit] relative"
           style={{
             width: getActiveTimeWidth(d, timeWidth),
             left: getActiveTimeStart(d, timeWidth),
@@ -121,6 +132,6 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           </div>
         </div>
       ))}
-    </>
+    </div>
   );
 }

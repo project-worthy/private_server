@@ -89,9 +89,15 @@ theme = createTheme(theme, {
     },
     MuiButton: {
       styleOverrides: {
-        root: {
+        contained: {
+          color: theme.color.background,
+        },
+        outlined: {
           color: theme.color.primary,
+        },
+        root: {
           borderColor: theme.color.highlight,
+          backgroundColor: theme.color.highlight,
         },
       },
     },
@@ -99,6 +105,17 @@ theme = createTheme(theme, {
       styleOverrides: {
         root: {
           color: theme.color.primary,
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          color: theme.color.primary,
+          "&.Mui-selected": {
+            color: theme.color.highlight,
+            backgroundColor: theme.color.blend,
+          },
         },
       },
     },
