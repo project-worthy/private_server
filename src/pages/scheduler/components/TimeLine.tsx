@@ -1,10 +1,11 @@
-import { useState } from "react";
-
 import { locale } from "dayjs";
 
 import { Box } from "components/layouts";
 
-import TimeScheduler, { TimeSchedulerType } from "./TimeScheduler";
+import TimeSchedulerDetail from "./TimeSchedulerDetail";
+import TimeSchedulerInfo from "./TimeSchedulerInfo";
+
+import type { TimeSchedulerType } from "../types";
 
 locale("ko");
 
@@ -24,23 +25,33 @@ export default function TimeLine(props: TimeLineProps) {
       <Box className="h-full " items="start">
         <div className="relative w-full h-full">
           <div className="overflow-x-scroll h-full">
-            <div className="w-full ml-[25%]">
+            <div className="w-full" style={{ marginLeft: "calc(25% + 1rem)" }}>
               <div className="inline-flex">
                 {timeNumber.map((v) => (
                   <div
-                    className=" h-5 relative "
+                    className=" h-5 sticky"
                     key={"time" + v}
-                    style={{ width: timeWidth }}
+                    style={{ width: timeWidth, left: "calc(25% + 1rem)" }}
                   >
-                    <span className="absolute right-0 translate-x-1/2 bg-background">
+                    <span className="right-0 translate-x-1/2 bg-background text-primary">
                       {v}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="h-12">
+              <div className="h-12 mb-2">
                 {dataSource.map((d, i) => (
-                  <TimeScheduler data={d} key={`time-scheduler-${i}`} />
+                  <>
+                    <TimeSchedulerInfo
+                      data={d}
+                      key={`time-scheduler-info-${i}`}
+                    />
+                    <TimeSchedulerDetail
+                      data={d}
+                      timeWidth={timeWidth}
+                      key={`time-scheduler-detail-${i}`}
+                    />
+                  </>
                 ))}
               </div>
             </div>

@@ -4,21 +4,20 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { Autocomplete, IconButton, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
+import { Box } from "components/layouts";
+
+import Icon from "./Icon";
 import Tag from "./Tag";
 
 import type { TagType } from "./Tag";
 
-const CustomAutocomplete = styled(Autocomplete<TagType, true>)(() => ({
-  "& .MuiOutlinedInput-root": {
-    borderRadius: 0,
-    border: "none",
-    "& fieldset": {
-      border: "none",
-    },
-  },
-  "& .MuiAutocomplete-popupIndicator": {
-    display: "none",
-  },
+const CustomAutocomplete = styled(Autocomplete<TagType, true>)(({ theme }) => ({
+  // "& .MuiAutocomplete-endAdornment": {
+  //   color: theme.color.primary,
+  // },
+  // "& .MuiInputBase-adornedEnd": {
+  //   color: "red", // Change clear icon color (affects entire adornment)
+  // },
 }));
 
 export type TagsProps = {
@@ -59,7 +58,7 @@ export default function Tags(props: TagsProps) {
           options={tagsOptions}
           defaultValue={data}
           onInputChange={(_, v) => handleInputChange(v)}
-          getOptionLabel={(o) => o.label ?? ""}
+          getOptionLabel={(o) => o.label}
           renderTags={(tags) => {
             return (
               <>
@@ -78,7 +77,9 @@ export default function Tags(props: TagsProps) {
         <IconButton
           onClick={() => onTagAdd?.({ label: inputValue, color: "#707070" })}
         >
-          <AddIcon />
+          <Icon>
+            <AddIcon />
+          </Icon>
         </IconButton>
       )}
     </div>

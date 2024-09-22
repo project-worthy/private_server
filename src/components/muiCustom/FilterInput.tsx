@@ -5,6 +5,8 @@ import { styled } from "@mui/material/styles";
 
 import cs from "utils/className";
 
+import Icon from "./Icon";
+
 import type { InputBaseProps } from "@mui/material";
 
 export type FilterInputProps = {
@@ -13,6 +15,9 @@ export type FilterInputProps = {
 } & InputBaseProps;
 
 export const CustomInput = styled(Input)(({ theme }) => ({
+  borderWidth: 2,
+  caretColor: theme.color.primary,
+  color: theme.color.primary,
   "&.Mui-checked": {
     color: theme.color.highlight,
   },
@@ -21,6 +26,9 @@ export const CustomInput = styled(Input)(({ theme }) => ({
   },
   "&.MuiOutlinedInput-root": {
     borderRadius: "50vh",
+  },
+  "& .base-Input-input": {
+    backgroundColor: theme.color.background,
   },
 }));
 
@@ -36,13 +44,15 @@ export default function FilterInput(props: FilterInputProps) {
           className: cs.join(rootCS, fullSize ? "w-full" : ""),
         },
         input: {
-          className: "w-full h-full px-2 outline-none",
+          className: "w-full h-full px-2 outline-none bg-primary",
         },
       }}
       placeholder={"이름이나 태그 등을 입력해주세요"}
       startAdornment={
         <InputAdornment position="start">
-          <SortIcon />
+          <Icon>
+            <SortIcon />
+          </Icon>
         </InputAdornment>
       }
     ></CustomInput>

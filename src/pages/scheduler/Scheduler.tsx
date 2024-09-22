@@ -5,7 +5,7 @@ import { FilterInput } from "components/muiCustom";
 
 import { TimeLine } from "./components";
 
-import type { TimeSchedulerType } from "./components";
+import type { TimeSchedulerType } from "./types";
 
 const dummyData: TimeSchedulerType[] = [
   {
@@ -55,7 +55,7 @@ const search = (data: TimeSchedulerType[], value: string) => {
 };
 
 export default function Scheduler() {
-  const [data, setData] = useState<TimeSchedulerType[]>(dummyData);
+  const [data, _] = useState<TimeSchedulerType[]>(dummyData);
   const [filterData, setFilterData] = useState<TimeSchedulerType[]>(data);
 
   const handleFilter = (value: string) => {
