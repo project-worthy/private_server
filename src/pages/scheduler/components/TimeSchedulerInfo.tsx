@@ -42,12 +42,15 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
           }}
         >
           <div className="flex flex-col w-[30lvw] min-w-[300px]">
-            <Button startIcon={<EditIcon />}>수정</Button>
-            <Button startIcon={<DeleteIcon />}>삭제</Button>
+            <Button variant="text" startIcon={<EditIcon />}>
+              수정
+            </Button>
+            <Button variant="text" startIcon={<DeleteIcon />}>
+              삭제
+            </Button>
             <div>
               <Tags data={data.tags} />
             </div>
-            <Button></Button>
           </div>
         </Popover>
       </div>

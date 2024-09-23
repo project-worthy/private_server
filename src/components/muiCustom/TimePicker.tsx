@@ -4,8 +4,15 @@ import { ToggleButtonGroup, ToggleButton, Button } from "@mui/material";
 
 import InputNumber from "./InputNumber";
 
-export default function TimePicker() {
-  const [amPm, setAmPm] = useState("AM");
+export type TimePickerProps = {
+  hour: number;
+  minute: number;
+  hourType: "12" | "24";
+  period?: "AM" | "PM";
+};
+export default function TimePicker(props: TimePickerProps) {
+  const { period, hour, minute } = props;
+  const [amPm, setAmPm] = useState(period);
   const [hourType, setHourType] = useState("12");
 
   return (
@@ -20,10 +27,10 @@ export default function TimePicker() {
             onChange={(_, h) => setHourType(h)}
             aria-label="text alignment"
           >
-            <ToggleButton value="left" aria-label="left aligned">
+            <ToggleButton value="12" aria-label="left aligned">
               12
             </ToggleButton>
-            <ToggleButton value="center" aria-label="centered">
+            <ToggleButton value="24" aria-label="centered">
               24
             </ToggleButton>
           </ToggleButtonGroup>
@@ -31,24 +38,26 @@ export default function TimePicker() {
       </dl>
 
       <div className="flex items-center gap-x-2">
-        <ToggleButtonGroup
-          size="large"
-          orientation="vertical"
-          exclusive
-          onChange={(_, period) => {
-            if (period !== null) {
-              setAmPm(period);
-            }
-          }}
-          value={amPm}
-        >
-          <ToggleButton value={"AM"}>AM</ToggleButton>
-          <ToggleButton value={"PM"}>PM</ToggleButton>
-        </ToggleButtonGroup>
+        {amPm && (
+          <ToggleButtonGroup
+            size="large"
+            orientation="vertical"
+            exclusive
+            onChange={(_, p) => {
+              if (p !== null) {
+                setAmPm(p);
+              }
+            }}
+            value={amPm}
+          >
+            <ToggleButton value={"AM"}>AM</ToggleButton>
+            <ToggleButton value={"PM"}>PM</ToggleButton>
+          </ToggleButtonGroup>
+        )}
 
-        <InputNumber />
+        <InputNumber defaultValue={hour} />
         <span className="text-[64px]">:</span>
-        <InputNumber />
+        <InputNumber defaultValue={minute} />
       </div>
       <div className="self-end">
         <Button variant="contained">확인</Button>

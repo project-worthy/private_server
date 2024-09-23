@@ -1,7 +1,12 @@
 import { useState } from "react";
 
 import { Popover, TimePicker } from "components/muiCustom";
-import { getActiveTimeStart, getActiveTimeWidth, getTime } from "utils/date";
+import {
+  getActiveTimeStart,
+  getActiveTimeWidth,
+  getRatio,
+  getTime,
+} from "utils/date";
 
 import type { TimeSchedulerType } from "../types";
 import type { TimeTuple } from "types/date";
@@ -17,6 +22,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const timeWidth = _timeWidth ?? 64;
 
   const [openDateAnchorEl, setOpenDateAnchorEl] = useState<HTMLElement>();
+  const [isDrag, setIsDrag] = useState(-1);
 
   const [hoverAnchorEl, setHoverAnchorEl] = useState<HTMLElement>();
   const [handleCurrentData, setHandleCurrentData] = useState<TimeTuple>([
@@ -24,6 +30,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   ]);
 
   const isDateOpen = Boolean(openDateAnchorEl);
+  const minuteRatio = getRatio("minute", timeWidth);
 
   const handleHoverOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -37,21 +44,36 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     setHoverAnchorEl(undefined);
   };
 
-  const isHoverOpen = () => Boolean(hoverAnchorEl);
+  const isHoverOpen = Boolean(hoverAnchorEl);
 
-  const handleDateOpen = (event: React.MouseEvent<HTMLElement>) =>
-    setOpenDateAnchorEl(event.currentTarget);
+  const handleMouseDown = () => setIsDrag(0);
+  const handleMouseMove = (
+    e: React.MouseEvent<HTMLElement>,
+    basis: TimeTuple,
+  ) => {
+    if (isDrag > 0) {
+      const a = getActiveTimeStart(basis, timeWidth);
+      console.log(e.clientX - a);
+    }
+    if (isDrag == 0) setIsDrag(1);
+  };
+  const handleMouseUp = (e: React.MouseEvent<HTMLElement>) => {
+    if (isDrag) console.log("drag");
+    else setOpenDateAnchorEl(e.currentTarget);
+
+    setIsDrag(-1);
+  };
 
   const handleDateClose = () => setOpenDateAnchorEl(undefined);
   return (
     <div className="h-[inherit] relative mb-2">
       <div className="flex h-[inherit] absolute">
-        {/* 이거 이제 버튼 누르면 새 스케줄 생성하는 형식으로 변경 */}
+        {/* TODO: 이거 이제 버튼 누르면 새 스케줄 생성하는 형식으로 변경 */}
         {timeNumber.map((e, i) => (
           <div
             key={i}
             style={{ height: "inherit", width: timeWidth }}
-            className="hover:bg-highlight"
+            // className="hover:bg-highlight"
           ></div>
         ))}
       </div>
@@ -72,7 +94,9 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
               className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
               onMouseEnter={(e) => handleHoverOpen(e, d.start)}
               onMouseLeave={handleHoverClose}
-              onClick={handleDateOpen}
+              onMouseMove={(e) => handleMouseMove(e, d.start)}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
             >
               <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
             </div>
@@ -81,7 +105,9 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
               className="group absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
               onMouseEnter={(e) => handleHoverOpen(e, d.end)}
               onMouseLeave={handleHoverClose}
-              onClick={handleDateOpen}
+              onMouseMove={(e) => handleMouseMove(e, d.end)}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
             >
               <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
             </div>
@@ -103,7 +129,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                 },
               }}
             >
-              <TimePicker />
+              <TimePicker
+                hour={handleCurrentData[0]}
+                minute={handleCurrentData[1]}
+                hourType="12"
+              />
             </Popover>
             <Popover
               sx={{
@@ -113,7 +143,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                   boxShadow: "none",
                 },
               }}
-              open={isHoverOpen()}
+              open={isHoverOpen}
               onClose={handleHoverClose}
               anchorEl={hoverAnchorEl}
               anchorOrigin={{

@@ -91,13 +91,19 @@ theme = createTheme(theme, {
       styleOverrides: {
         contained: {
           color: theme.color.background,
+          backgroundColor: theme.color.highlight,
         },
         outlined: {
           color: theme.color.primary,
         },
+        text: {
+          color: theme.color.primary,
+          "&:hover": {
+            backgroundColor: theme.color.blend,
+          },
+        },
         root: {
           borderColor: theme.color.highlight,
-          backgroundColor: theme.color.highlight,
         },
       },
     },

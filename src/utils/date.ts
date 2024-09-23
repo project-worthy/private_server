@@ -1,8 +1,14 @@
 import dayjs from "dayjs";
 
-import type { Dayjs } from "dayjs";
+import type { Dayjs, ManipulateType } from "dayjs";
 import type { TimeSchedulerType } from "pages/scheduler";
 import type { ActiveTime, TimeTuple } from "types/date";
+
+export const MINUTE = 60;
+
+export const HOUR = 60 * MINUTE;
+
+export const DAY = 24 * HOUR;
 
 export function getTimeRatio(date: Dayjs) {
   const todayStart = date.startOf("date");
@@ -29,14 +35,30 @@ export const getActiveTimeWidth = (data: ActiveTime, width: number) => {
   return totalWidth * diff;
 };
 
-export const getActiveTimeStart = (data: ActiveTime, width: number) => {
+export const getActiveTimeStart = (
+  data: ActiveTime | TimeTuple,
+  width: number,
+) => {
   const totalWidth = width * 24;
-  const { start } = getActiveTimePosition(data);
+  let start = 0;
+  if (Array.isArray(data)) start = getTimeRatio(getTime(data));
+  else start = getActiveTimePosition(data).start;
   return totalWidth * start;
 };
 
-export const getActiveTimeEnd = (data: ActiveTime, width: number) => {
+export const getActiveTimeEnd = (
+  data: ActiveTime | TimeTuple,
+  width: number,
+) => {
   const totalWidth = width * 24;
-  const { end } = getActiveTimePosition(data);
+  let end = 0;
+  if (Array.isArray(data)) end = getTimeRatio(getTime(data));
+  else end = getActiveTimePosition(data).end;
   return totalWidth * end;
+};
+
+export const getRatio = (unit: ManipulateType, width: number) => {
+  const a = dayjs();
+  const b = dayjs().add(1, unit);
+  return ((b.unix() - a.unix()) / DAY) * width;
 };
