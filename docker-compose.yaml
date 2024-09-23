@@ -1,10 +1,46 @@
 services:
+
+  # web
+  react:
+    build:
+      context: ./react
+    hostname: react
+    container_name: react
+    ports:
+      - "3000:3000"
+    environment:
+      - TZ=Asia/Seoul 
+      - CHOKIDAR_USEPOLLING=true
+    command: npm start
+    restart: always
+
+  # was
   fastapi:
-    build: .
+    build:
+      context: ./fastapi
+    hostname: fastapi
+    container_name: fastapi
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
+    # volumes:
+    #   - .:/app
     environment:
+      - TZ=Asia/Seoul 
       - ENVIRONMENT=development
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: always
+
+  # db
+  mysql:
+      build:
+          context: ./mysql
+      container_name: mysql
+      hostname: mysql       
+      privileged: true
+      environment: 
+        - TZ=Asia/Seoul 
+      # volumes:
+      #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      restart: always
+
+# DB와 WAS는 volume을 따로 할당하여 배포 과정 도중 데이터 손실 방지
