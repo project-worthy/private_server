@@ -6,17 +6,17 @@ on:
       - main
 
 jobs:
-  build:
+  build: # 배포 전 테스트
     runs-on: ubuntu-22.04  # 우분투 20 이상
 
     services:
       mysql:
-        image: mysql:8  # MySQL 8 이상
+        image: mysql:8  # MySQL 8
         env:
           MYSQL_ROOT_PASSWORD: 1234
           MYSQL_DATABASE: world
         ports:
-          - 3307:3306
+          - 3307:3306 # 3307 > 3306 으로 수정 시, my.cnf 의 bind-address 옵션과 충돌
         options: >-
           --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
@@ -30,21 +30,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12.3'  # 파이썬 3.12.3
+          python-version: '3.12.3'  # Python 3.12.3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '21'  # Node.js 21 이상
+          node-version: '21'  # Node.js 21
 
       - name: Build and run Docker Compose
         run: docker compose -f docker-compose.yaml up --build -d
 
       # - name: Run tests
       #   run: docker exec -it fastapi pytest
-        # FastAPI 테스트 실행 (필요에 따라 수정)
+        # FastAPI 테스트 (필요에 따라 수정)
 
-  deploy:
+  deploy: # 테스트 후 배포
     runs-on: ubuntu-22.04  # 우분투 20 이상
     needs: build
     if: github.ref == 'refs/heads/main'  # main 브랜치에서만 배포

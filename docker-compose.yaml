@@ -45,4 +45,4 @@ services:
     #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
 
-# DB와 WAS는 volume을 따로 할당하여 배포 과정 도중 데이터 손실 방지
+# DB와 WAS는 volume을 따로 할당하여 배포 과정 도중 고객 데이터 손실 방지
