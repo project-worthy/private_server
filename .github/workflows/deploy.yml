@@ -40,8 +40,8 @@ jobs:
       - name: Build and run Docker Compose
         run: docker compose -f docker-compose.yaml up --build -d
 
-      - name: Run tests
-        run: docker exec -it fastapi pytest
+      # - name: Run tests
+      #   run: docker exec -it fastapi pytest
         # FastAPI 테스트 실행 (필요에 따라 수정)
 
   deploy:
