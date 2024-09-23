@@ -68,7 +68,7 @@ async def read_items(token: str = Depends(oauth2_scheme)):
     return fake_items_db
 
 # IoT 장비와의 통신을 위한 예제 엔드포인트
-@app.post("/iot/send-data/")
+@app.post("/device/")
 async def send_data_to_iot(data: Item, current_user: str = Depends(get_current_user)):
     # 여기서 IoT 장비에 데이터를 전송하는 로직을 구현
     return {"message": f"데이터가 IoT 장비에 전송되었습니다: {data.name}"}

@@ -1,0 +1,53 @@
+name: Deploy to Server  # CI/CD 파이프라인 이름
+
+on:
+  push:
+    branches:
+      - main  # main 브랜치에 푸시될 때 파이프라인 실행
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # GitHub Actions가 실행되는 환경
+
+    steps:
+      - name: Checkout repository  # 저장소에서 코드 가져오기
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12.3  # Python 환경 설정
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.12.3'
+
+      - name: Install dependencies  # 필요한 Python 패키지 설치
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build Docker image  # Docker 이미지 빌드
+        run: |
+          docker build -t fastapi-app:latest .
+
+      - name: Log in to Docker Hub  # Docker Hub에 로그인 (필요할 경우)
+        run: |
+          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Push Docker image to Docker Hub  # Docker 이미지 푸시
+        run: |
+          docker tag fastapi-app:latest your_dockerhub_username/fastapi-app:latest
+          docker push your_dockerhub_username/fastapi-app:latest
+
+  deploy:
+    needs: build  # 빌드 작업이 완료된 후 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH  # SSH를 통해 원격 서버에 배포
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          script: |
+            docker pull your_dockerhub_username/fastapi-app:latest
+            docker stop fastapi-container || true
+            docker rm fastapi-container || true
+            docker run -d --name fastapi-container -p 8000:8000 your_dockerhub_username/fastapi-app:latest
