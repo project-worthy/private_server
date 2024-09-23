@@ -38,7 +38,7 @@ jobs:
           node-version: '21'  # Node.js 21 이상
 
       - name: Build and run Docker Compose
-        run: docker-compose -f docker-compose.yaml up --build -d
+        run: docker compose -f docker-compose.yaml up --build -d
 
       - name: Run tests
         run: docker exec -it fastapi pytest
@@ -55,5 +55,5 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker-compose -f docker-compose.yaml down
-          docker-compose -f docker-compose.yaml up -d
+          docker compose -f docker-compose.yaml down
+          docker compose -f docker-compose.yaml up -d
