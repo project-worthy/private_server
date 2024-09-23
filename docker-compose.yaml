@@ -32,15 +32,17 @@ services:
 
   # db
   mysql:
-      build:
-          context: ./mysql
-      container_name: mysql
-      hostname: mysql       
-      privileged: true
-      environment: 
-        - TZ=Asia/Seoul 
-      # volumes:
-      #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      restart: always
+    build:
+        context: ./mysql
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    hostname: mysql       
+    privileged: true
+    environment: 
+      - TZ=Asia/Seoul 
+    # volumes:
+    #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
 
 # DB와 WAS는 volume을 따로 할당하여 배포 과정 도중 데이터 손실 방지
