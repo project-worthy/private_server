@@ -125,6 +125,22 @@ theme = createTheme(theme, {
         },
       },
     },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: theme.color.background,
+          color: theme.color.primary,
+          borderRadius: "15px",
+        },
+      },
+    },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          fontWeight: "bold",
+        },
+      },
+    },
   },
 });
 

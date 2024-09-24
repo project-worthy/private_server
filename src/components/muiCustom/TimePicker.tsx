@@ -5,40 +5,28 @@ import { ToggleButtonGroup, ToggleButton, Button } from "@mui/material";
 import InputNumber from "./InputNumber";
 
 export type TimePickerProps = {
-  hour: number;
-  minute: number;
+  hour?: number;
+  minute?: number;
   hourType: "12" | "24";
   period?: "AM" | "PM";
+  size?: "small" | "medium" | "large";
 };
+
 export default function TimePicker(props: TimePickerProps) {
-  const { period, hour, minute } = props;
-  const [amPm, setAmPm] = useState(period);
-  const [hourType, setHourType] = useState("12");
+  const { period, hour, minute, hourType, size: _size } = props;
+  const [amPm, setAmPm] = useState(period ?? "AM");
+
+  const sizeConfig = {
+    small: 16,
+    medium: 32,
+    large: 64,
+  };
+  const size = sizeConfig[_size ?? "medium"];
 
   return (
     <div className="flex flex-col items-center px-4 py-2">
-      <dl className="w-full flex justify-between items-center">
-        <dt>Enter Time</dt>
-        <dd>
-          <ToggleButtonGroup
-            value={hourType}
-            size="small"
-            exclusive
-            onChange={(_, h) => setHourType(h)}
-            aria-label="text alignment"
-          >
-            <ToggleButton value="12" aria-label="left aligned">
-              12
-            </ToggleButton>
-            <ToggleButton value="24" aria-label="centered">
-              24
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </dd>
-      </dl>
-
       <div className="flex items-center gap-x-2">
-        {amPm && (
+        {hourType === "12" && (
           <ToggleButtonGroup
             size="large"
             orientation="vertical"
@@ -55,12 +43,9 @@ export default function TimePicker(props: TimePickerProps) {
           </ToggleButtonGroup>
         )}
 
-        <InputNumber defaultValue={hour} />
-        <span className="text-[64px]">:</span>
-        <InputNumber defaultValue={minute} />
-      </div>
-      <div className="self-end">
-        <Button variant="contained">확인</Button>
+        <InputNumber defaultValue={hour} min={0} max={24} />
+        <span style={{ fontSize: size }}>:</span>
+        <InputNumber defaultValue={minute} min={0} max={60} />
       </div>
     </div>
   );

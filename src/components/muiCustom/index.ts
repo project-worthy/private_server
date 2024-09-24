@@ -7,6 +7,7 @@ export { default as Icon } from "./Icon";
 export { default as IconButton } from "./IconButton";
 export { default as Popover } from "./Popover";
 export { default as TimePicker } from "./TimePicker";
+export { default as TimePopup } from "./TimePopup";
 
 export * from "./Tags";
 export * from "./Tag";

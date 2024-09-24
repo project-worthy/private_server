@@ -1,12 +1,14 @@
 import { useState } from "react";
 
-import { Popover, TimePicker } from "components/muiCustom";
+import { Popover, TimePopup } from "components/muiCustom";
 import {
   getActiveTimeStart,
   getActiveTimeWidth,
   getRatio,
   getTime,
 } from "utils/date";
+
+import SchedeulerAddModal from "./SchedulerAddModal";
 
 import type { TimeSchedulerType } from "../types";
 import type { TimeTuple } from "types/date";
@@ -28,6 +30,10 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const [handleCurrentData, setHandleCurrentData] = useState<TimeTuple>([
     0, 0, 0,
   ]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [startTime, setStartTime] = useState(0);
 
   const isDateOpen = Boolean(openDateAnchorEl);
   const minuteRatio = getRatio("minute", timeWidth);
@@ -65,6 +71,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   };
 
   const handleDateClose = () => setOpenDateAnchorEl(undefined);
+
+  const handleClickAddTime = (time: number) => {
+    setModalOpen(true);
+    setStartTime(time);
+  };
   return (
     <div className="h-[inherit] relative mb-2">
       <div className="flex h-[inherit] absolute">
@@ -73,6 +84,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           <div
             key={i}
             style={{ height: "inherit", width: timeWidth }}
+            onClick={() => handleClickAddTime(i)}
             // className="hover:bg-highlight"
           ></div>
         ))}
@@ -129,7 +141,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                 },
               }}
             >
-              <TimePicker
+              <TimePopup
                 hour={handleCurrentData[0]}
                 minute={handleCurrentData[1]}
                 hourType="12"
@@ -159,6 +171,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                 {getTime(handleCurrentData).format("HH:mm")}
               </span>
             </Popover>
+            <SchedeulerAddModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              startNum={startTime}
+            />
           </div>
         </div>
       ))}
