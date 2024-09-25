@@ -27,14 +27,14 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const timeWidth = _timeWidth ?? 64;
 
   const [openDateAnchorEl, setOpenDateAnchorEl] = useState<HTMLElement>();
-
   const [hoverAnchorEl, setHoverAnchorEl] = useState<HTMLElement>();
   const [handleCurrentData, setHandleCurrentData] = useState<TimeTuple>([
     0, 0, 0,
   ]);
-
-  // const [startDate,setStartDate] = useState(0);
-  // const []
+  const [hovTimeDisplayPos, setHovTimeDisplayPos] = useState<{
+    left: number;
+    top: number;
+  }>();
 
   const handleClickThumb = (e: MouseEvent<HTMLElement>) =>
     setOpenDateAnchorEl(e.currentTarget);
@@ -45,14 +45,20 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const timeLineClicknDrag = useMouseDetectClicknDrag<HTMLDivElement>({
     onClick: (e) => {
       const { left } = e.currentTarget.getBoundingClientRect();
-      console.log(convertPosToTime(e.clientX - left, timeWidth));
+      // console.log(convertPosToTime(e.clientX - left, timeWidth));
+    },
+    onHovering: (e) => {
+      const { left, top } = e.currentTarget.getBoundingClientRect();
+      // console.log(convertPosToTime(e.clientX - left, timeWidth));
+      setHovTimeDisplayPos({ left: e.clientX, top });
     },
     onDrag: (e) => console.log(e),
+    onHoverEnd: () => {
+      setHovTimeDisplayPos(undefined);
+    },
   });
 
   const [modalOpen, setModalOpen] = useState(false);
-
-  const [startTime, setStartTime] = useState(0);
 
   const isDateOpen = Boolean(openDateAnchorEl);
 
@@ -63,12 +69,12 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     setHoverAnchorEl(event.currentTarget);
     setHandleCurrentData(value);
   };
-
   const handleHoverClose = () => setHoverAnchorEl(undefined);
-
   const isHoverOpen = Boolean(hoverAnchorEl);
 
   const handleDateClose = () => setOpenDateAnchorEl(undefined);
+
+  // const [startTime, setStartTime] = useState(0);
 
   // const handleClickAddTime = (time: number) => {
   //   setModalOpen(true);
@@ -77,6 +83,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   return (
     <div className="h-12 relative mb-2" {...timeLineClicknDrag}>
+      {hovTimeDisplayPos && (
+        <div className="fixed" style={hovTimeDisplayPos}>
+          a
+        </div>
+      )}
       {data.activeTimes.map((d, i) => (
         <div key={`activeTime-${data.name}-${i}`}>
           <div
@@ -91,18 +102,18 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           <div
             className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
             style={{ left: getActiveTimeStart(d, timeWidth) }}
+            {...thumbClicknDrag}
             onMouseEnter={(e) => handleHoverOpen(e, d.start)}
             onMouseLeave={handleHoverClose}
-            {...thumbClicknDrag}
           >
             <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
           </div>
           <div
             className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
             style={{ left: getActiveTimeEnd(d, timeWidth) }}
+            {...thumbClicknDrag}
             onMouseEnter={(e) => handleHoverOpen(e, d.end)}
             onMouseLeave={handleHoverClose}
-            {...thumbClicknDrag}
           >
             <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
           </div>
@@ -160,7 +171,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
       <SchedeulerAddModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        startNum={startTime}
+        // startNum={startTime}
       />
     </div>
   );

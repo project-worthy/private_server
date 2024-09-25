@@ -40,6 +40,7 @@ export default function TimeLine(props: TimeLineProps) {
       setIntervalId(undefined);
     };
   }, []);
+
   return (
     <>
       <Box className="h-full " items="start">
