@@ -1,4 +1,9 @@
-import { MouseEvent, useState } from "react";
+import { useState, useRef } from "react";
+
+// import { Add as AddIcon } from "@mui/icons-material";
+import { ButtonBase } from "@mui/material";
+
+import { hover } from "@testing-library/user-event/dist/hover";
 
 import { Popover, TimePopup } from "components/muiCustom";
 import useMouseDetectClicknDrag from "hooks/useMouseDetectClicknDrag";
@@ -8,11 +13,13 @@ import {
   getActiveTimeWidth,
   getTime,
   convertPosToTime,
+  getRatio,
 } from "utils/date";
 
 import SchedeulerAddModal from "./SchedulerAddModal";
 
 import type { TimeSchedulerType } from "../types";
+import type { MouseEvent } from "react";
 import type { TimeTuple } from "types/date";
 
 type TimeSchedulerDetailProp = {
@@ -20,8 +27,6 @@ type TimeSchedulerDetailProp = {
   timeWidth?: number;
 };
 
-// const timeNumber: number[] = Array.from({ length: 25 }, (_, i) => i);
-// const today = dayjs();
 export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const { data, timeWidth: _timeWidth } = props;
   const timeWidth = _timeWidth ?? 64;
@@ -31,10 +36,12 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const [handleCurrentData, setHandleCurrentData] = useState<TimeTuple>([
     0, 0, 0,
   ]);
-  const [hovTimeDisplayPos, setHovTimeDisplayPos] = useState<{
-    left: number;
-    top: number;
-  }>();
+
+  // 마우스 timeline에 올리면 버튼 클릭시 모달
+  const [hoverTimeTuple, setHoverTimeTuple] = useState<TimeTuple>();
+  const [hoverTimeModal, setHoverTimeModal] = useState(false);
+
+  const hovTimeDisplayRef = useRef<HTMLDivElement>(null);
 
   const handleClickThumb = (e: MouseEvent<HTMLElement>) =>
     setOpenDateAnchorEl(e.currentTarget);
@@ -44,17 +51,21 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   });
   const timeLineClicknDrag = useMouseDetectClicknDrag<HTMLDivElement>({
     onClick: (e) => {
-      const { left } = e.currentTarget.getBoundingClientRect();
-      // console.log(convertPosToTime(e.clientX - left, timeWidth));
+      setModalOpen(true);
+      setTimeout(() => setHoverTimeModal(false), 300);
     },
     onHovering: (e) => {
-      const { left, top } = e.currentTarget.getBoundingClientRect();
-      // console.log(convertPosToTime(e.clientX - left, timeWidth));
-      setHovTimeDisplayPos({ left: e.clientX, top });
+      const { left, height } = e.currentTarget.getBoundingClientRect();
+      const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+
+      mousePosTime[1] = Math.floor(mousePosTime[1] / 10) * 10; // floor in nearest whole number
+      mousePosTime[2] = 0;
+      setHoverTimeTuple(mousePosTime);
+      if (!hoverTimeModal) setHoverTimeModal(true);
     },
     onDrag: (e) => console.log(e),
     onHoverEnd: () => {
-      setHovTimeDisplayPos(undefined);
+      setHoverTimeTuple(undefined);
     },
   });
 
@@ -69,24 +80,45 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     setHoverAnchorEl(event.currentTarget);
     setHandleCurrentData(value);
   };
+
   const handleHoverClose = () => setHoverAnchorEl(undefined);
   const isHoverOpen = Boolean(hoverAnchorEl);
 
   const handleDateClose = () => setOpenDateAnchorEl(undefined);
 
-  // const [startTime, setStartTime] = useState(0);
-
-  // const handleClickAddTime = (time: number) => {
-  //   setModalOpen(true);
-  //   setStartTime(time);
-  // };
+  const tenMinWidth = getRatio("minute", timeWidth) * 24 * 10;
 
   return (
     <div className="h-12 relative mb-2" {...timeLineClicknDrag}>
-      {hovTimeDisplayPos && (
-        <div className="fixed" style={hovTimeDisplayPos}>
-          a
-        </div>
+      {hoverTimeModal && hoverTimeTuple && (
+        <>
+          <div
+            className="absolute flex items-center justify-center border border-highlight h-12 rounded-sm"
+            style={{
+              left: getActiveTimeStart(hoverTimeTuple, timeWidth),
+              top: 0,
+              width: tenMinWidth,
+              fontSize: "10px",
+            }}
+            ref={hovTimeDisplayRef}
+          >
+            <ButtonBase
+              sx={{ width: "100%", height: "100%" }}
+              // onClick={() => handleClickAddTime(hoverTimeTuple[0])}
+            >
+              <div className="relative" style={{ width: 10, height: 10 }}>
+                <div
+                  className="absolute bg-primary left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+                  style={{ width: 8, height: 1 }}
+                ></div>
+                <div
+                  className="absolute bg-primary left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+                  style={{ width: 1, height: 8 }}
+                ></div>
+              </div>
+            </ButtonBase>
+          </div>
+        </>
       )}
       {data.activeTimes.map((d, i) => (
         <div key={`activeTime-${data.name}-${i}`}>
@@ -171,7 +203,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
       <SchedeulerAddModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        // startNum={startTime}
+        startNum={hoverTimeTuple}
       />
     </div>
   );

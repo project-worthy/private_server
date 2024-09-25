@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 
 interface MouseDetectClicknDragProps<T> {
   onClick?: (event: React.MouseEvent<T>) => void;
@@ -9,6 +9,11 @@ interface MouseDetectClicknDragProps<T> {
   onHoverEnd?: (event: React.MouseEvent<T>, ...args: unknown[]) => void;
 }
 
+function assertIsNode(e: EventTarget | null): asserts e is Node {
+  if (!e || !("nodeType" in e)) {
+    throw new Error(`Node expected`);
+  }
+}
 export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   props: MouseDetectClicknDragProps<T>,
 ) {
@@ -23,15 +28,24 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
 
   const [isDrag, setIsDrag] = useState(-1);
 
-  const handleMouseDown = () => setIsDrag(0);
+  const handleMouseDown = (e: React.MouseEvent<T>) => {
+    setIsDrag(0);
+  };
   const handleMouseMove = (e: React.MouseEvent<T>) => {
+    assertIsNode(e.target);
+    if (!e.currentTarget.contains(e.target)) {
+      handleMouseLeave(e);
+      return;
+    }
     if (isDrag > 0) onDrag?.(e);
     if (isDrag === 0) setIsDrag(1);
     onHovering?.(e);
   };
   const handleMouseUp = (e: React.MouseEvent<T>) => {
     if (isDrag) onDragFinsih?.(e);
-    else onClick?.(e);
+    else if (onClick) {
+      onClick(e);
+    }
 
     setIsDrag(-1);
   };

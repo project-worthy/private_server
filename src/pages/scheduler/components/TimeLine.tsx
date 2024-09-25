@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
-
-import dayjs, { locale } from "dayjs";
+import { locale } from "dayjs";
 
 import { Box } from "components/layouts";
-import { getActiveTimeStart, getTuple, todayTuple } from "utils/date";
+import useTimeInterval from "hooks/useTimeInterval";
 
 import TimeSchedulerDetail from "./TimeSchedulerDetail";
 import TimeSchedulerInfo from "./TimeSchedulerInfo";
@@ -22,24 +20,7 @@ type TimeLineProps = {
 
 export default function TimeLine(props: TimeLineProps) {
   const { dataSource } = props;
-  const [markerPositionX, setMarkerPositionX] = useState(
-    getActiveTimeStart(todayTuple, timeWidth),
-  );
-  const [intervalId, setIntervalId] =
-    useState<ReturnType<typeof setInterval>>();
-
-  useEffect(() => {
-    const checkTime = () => {
-      const timeTuple = getTuple(dayjs());
-
-      setMarkerPositionX(getActiveTimeStart(timeTuple, timeWidth));
-    };
-    setIntervalId(setInterval(checkTime, 60 * 1000));
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-      setIntervalId(undefined);
-    };
-  }, []);
+  const markerPosX = useTimeInterval(timeWidth);
 
   return (
     <>
@@ -78,7 +59,7 @@ export default function TimeLine(props: TimeLineProps) {
               <div className="mb-2 h-fit relative">
                 <div
                   className="marker-timeline"
-                  style={{ left: markerPositionX }}
+                  style={{ left: markerPosX }}
                 ></div>
                 {dataSource.map((d, i) => (
                   <>
