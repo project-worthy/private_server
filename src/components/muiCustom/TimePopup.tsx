@@ -11,7 +11,7 @@ export type TimePickerProps = {
   period?: "AM" | "PM";
 };
 export default function TimePopup(props: TimePickerProps) {
-  const [hourType, setHourType] = useState("12");
+  const [hourType, setHourType] = useState<TimePickerProps["hourType"]>("12");
 
   return (
     <div className="flex flex-col items-center px-4 py-2">
@@ -36,7 +36,7 @@ export default function TimePopup(props: TimePickerProps) {
       </dl>
 
       <div className="flex items-center gap-x-2">
-        <TimePicker {...props} />
+        <TimePicker {...props} hourType={hourType} />
       </div>
       <div className="self-end">
         <Button variant="contained">확인</Button>

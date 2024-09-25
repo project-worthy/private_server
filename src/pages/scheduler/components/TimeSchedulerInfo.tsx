@@ -23,7 +23,7 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
   const handlePopoverClose = () => setOpenAnchorEl(undefined);
 
   return (
-    <div className="absolute left-0 top-auto w-1/4 border-b borber-b-black pb-1 z-10">
+    <div className="left-0 top-auto w-full border-b borber-b-black pb-1 mb-1 z-10">
       <div className="flex items-center justify-between bg-background px-2">
         <dl className="text-primary">
           <dt>{data.name}</dt>
@@ -57,3 +57,4 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
     </div>
   );
 }
+//{/* <div className="absolute left-0 top-auto w-1/4 border-b borber-b-black pb-1 z-10"> */}

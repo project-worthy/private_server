@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { ToggleButtonGroup, ToggleButton, Button } from "@mui/material";
+import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 
 import InputNumber from "./InputNumber";
 
@@ -26,22 +26,21 @@ export default function TimePicker(props: TimePickerProps) {
   return (
     <div className="flex flex-col items-center px-4 py-2">
       <div className="flex items-center gap-x-2">
-        {hourType === "12" && (
-          <ToggleButtonGroup
-            size="large"
-            orientation="vertical"
-            exclusive
-            onChange={(_, p) => {
-              if (p !== null) {
-                setAmPm(p);
-              }
-            }}
-            value={amPm}
-          >
-            <ToggleButton value={"AM"}>AM</ToggleButton>
-            <ToggleButton value={"PM"}>PM</ToggleButton>
-          </ToggleButtonGroup>
-        )}
+        <ToggleButtonGroup
+          size="large"
+          orientation="vertical"
+          exclusive
+          onChange={(_, p) => {
+            if (p !== null) {
+              setAmPm(p);
+            }
+          }}
+          value={amPm}
+          style={{ visibility: hourType === "12" ? "visible" : "hidden" }}
+        >
+          <ToggleButton value={"AM"}>AM</ToggleButton>
+          <ToggleButton value={"PM"}>PM</ToggleButton>
+        </ToggleButtonGroup>
 
         <InputNumber defaultValue={hour} min={0} max={24} />
         <span style={{ fontSize: size }}>:</span>
