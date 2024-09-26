@@ -35,7 +35,7 @@ export default function SchedeulerAddModal(props: SchedeulerAddModalProp) {
         </div>
       </DialogContent>
       <DialogActions>
-        <Button variant="contained" onClick={onClose}>
+        <Button variant="contained" onClick={onClose} disableElevation>
           확인
         </Button>
       </DialogActions>

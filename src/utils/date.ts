@@ -21,6 +21,8 @@ export function getTimeRatio(date: Dayjs) {
 export const getTime = (data: TimeTuple) =>
   dayjs().set("hour", data[0]).set("minute", data[1]).set("second", data[2]);
 
+export const getUnix = (data: TimeTuple) => getTime(data).unix();
+
 export const getTuple = (data: Dayjs): TimeTuple => [
   data.get("hour"),
   data.get("minute"),
@@ -29,8 +31,8 @@ export const getTuple = (data: Dayjs): TimeTuple => [
 export const todayTuple = getTuple(today);
 
 export const getActiveTimePosition = (data: ActiveTime) => {
-  const start = getTimeRatio(getTime(data.start));
-  const end = getTimeRatio(getTime(data.end));
+  const start = getTimeRatio(dayjs.unix(data.start));
+  const end = getTimeRatio(dayjs.unix(data.end));
   return { start, end };
 };
 
@@ -39,7 +41,6 @@ export const convertPosToTime = (pos: number, width: number): TimeTuple => {
   const a = dayjs.unix(todayStart + (pos / (24 * width)) * DAY);
 
   return getTuple(a);
-  // return pos * DAY
 };
 
 export const getActiveTimePositions = (data: TimeSchedulerType) =>

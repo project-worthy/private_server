@@ -1,12 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
-// import { Add as AddIcon } from "@mui/icons-material";
 import { ButtonBase } from "@mui/material";
 
-import { hover } from "@testing-library/user-event/dist/hover";
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 
-import { Popover, TimePopup } from "components/muiCustom";
-import useMouseDetectClicknDrag from "hooks/useMouseDetectClicknDrag";
+import { TimePopup } from "components/muiCustom";
+import { Popover } from "components/muiCustom";
+import useMouseDetectClicknDrag, {
+  MouseState,
+} from "hooks/useMouseDetectClicknDrag";
 import {
   getActiveTimeStart,
   getActiveTimeEnd,
@@ -16,96 +19,120 @@ import {
   getRatio,
 } from "utils/date";
 
-import SchedeulerAddModal from "./SchedulerAddModal";
-
 import type { TimeSchedulerType } from "../types";
 import type { MouseEvent } from "react";
-import type { TimeTuple } from "types/date";
+import type { ActiveTime, TimeTuple } from "types/date";
 
+dayjs.extend(isBetween);
 type TimeSchedulerDetailProp = {
   data: TimeSchedulerType;
   timeWidth?: number;
 };
 
+function getNonOverlappingRanges(
+  existingRanges: ActiveTime[],
+  totalRange: number[],
+): ActiveTime[] {
+  existingRanges.sort((a, b) => a.start - b.start);
+
+  const nonOverlappingRanges = [];
+  let currentStart = totalRange[0];
+
+  for (const { start, end } of existingRanges) {
+    if (currentStart < start) {
+      nonOverlappingRanges.push({ start: currentStart, end: start });
+    }
+    currentStart = Math.max(currentStart, end);
+  }
+  if (currentStart < totalRange[1]) {
+    nonOverlappingRanges.push({ start: currentStart, end: totalRange[1] });
+  }
+
+  return nonOverlappingRanges;
+}
+
 export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const { data, timeWidth: _timeWidth } = props;
   const timeWidth = _timeWidth ?? 64;
 
-  const [openDateAnchorEl, setOpenDateAnchorEl] = useState<HTMLElement>();
-  const [hoverAnchorEl, setHoverAnchorEl] = useState<HTMLElement>();
-  const [handleCurrentData, setHandleCurrentData] = useState<TimeTuple>([
-    0, 0, 0,
-  ]);
+  const [hoverTimeLineData, setHoverTimeLineData] = useState<TimeTuple>();
 
-  // 마우스 timeline에 올리면 버튼 클릭시 모달
-  const [hoverTimeTuple, setHoverTimeTuple] = useState<TimeTuple>();
-  const [hoverTimeModal, setHoverTimeModal] = useState(false);
+  const [schedulerEditOpen, setSchedulerEditOpen] = useState(false);
 
   const hovTimeDisplayRef = useRef<HTMLDivElement>(null);
 
-  const handleClickThumb = (e: MouseEvent<HTMLElement>) =>
-    setOpenDateAnchorEl(e.currentTarget);
+  const tenMinWidth = getRatio("minute", timeWidth) * 24 * 10;
+  const dayStart = dayjs().startOf("date").unix();
+  const dayEnd = dayjs().endOf("date").unix();
+  const nonOverlap = getNonOverlappingRanges(data.activeTimes, [
+    dayStart,
+    dayEnd,
+  ]);
 
-  const thumbClicknDrag = useMouseDetectClicknDrag<HTMLElement>({
-    onClick: handleClickThumb,
-  });
-  const timeLineClicknDrag = useMouseDetectClicknDrag<HTMLDivElement>({
-    onClick: (e) => {
-      setModalOpen(true);
-      setTimeout(() => setHoverTimeModal(false), 300);
-    },
-    onHovering: (e) => {
-      const { left, height } = e.currentTarget.getBoundingClientRect();
-      const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
-
-      mousePosTime[1] = Math.floor(mousePosTime[1] / 10) * 10; // floor in nearest whole number
-      mousePosTime[2] = 0;
-      setHoverTimeTuple(mousePosTime);
-      if (!hoverTimeModal) setHoverTimeModal(true);
-    },
-    onDrag: (e) => console.log(e),
-    onHoverEnd: () => {
-      setHoverTimeTuple(undefined);
-    },
-  });
-
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const isDateOpen = Boolean(openDateAnchorEl);
-
-  const handleHoverOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    value: TimeTuple,
+  const handleTimeLinehovering = (
+    e: MouseEvent<HTMLDivElement>,
+    { isDrag }: MouseState,
   ) => {
-    setHoverAnchorEl(event.currentTarget);
-    setHandleCurrentData(value);
+    const { left } = e.currentTarget.getBoundingClientRect();
+    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+    if (
+      !nonOverlap.some((nonTime) =>
+        getTime(mousePosTime).isBetween(
+          dayjs.unix(nonTime.start),
+          dayjs.unix(nonTime.end),
+        ),
+      )
+    ) {
+      handleTimeLineEnd();
+      return;
+    }
+
+    if (isDrag) return;
+
+    mousePosTime[1] = Math.floor(mousePosTime[1] / 10) * 10; // floor in nearest whole number
+    mousePosTime[2] = 0;
+    setHoverTimeLineData(mousePosTime);
+    if (!schedulerEditOpen) setSchedulerEditOpen(true);
   };
 
-  const handleHoverClose = () => setHoverAnchorEl(undefined);
-  const isHoverOpen = Boolean(hoverAnchorEl);
+  const handleTimeLineEnd = () => setHoverTimeLineData(undefined);
 
-  const handleDateClose = () => setOpenDateAnchorEl(undefined);
+  const [timeLineRef] = useMouseDetectClicknDrag<HTMLDivElement>({
+    onHovering: handleTimeLinehovering,
+    onHoverEnd: handleTimeLineEnd,
+  });
 
-  const tenMinWidth = getRatio("minute", timeWidth) * 24 * 10;
+  useEffect(() => {}, []);
 
   return (
-    <div className="h-12 relative mb-2" {...timeLineClicknDrag}>
-      {hoverTimeModal && hoverTimeTuple && (
+    <div className="h-12 relative mb-2" ref={timeLineRef}>
+      <div>
+        {nonOverlap.map((e, i) => (
+          <div
+            key={`able-drag-${data.key}-${i}`}
+            className="able-drag absolute h-12"
+            data-startDate={e.start}
+            data-endDate={e.end}
+            style={{
+              left: getActiveTimeStart(e, timeWidth),
+              width: getActiveTimeWidth(e, timeWidth),
+            }}
+          ></div>
+        ))}
+      </div>
+      {schedulerEditOpen && hoverTimeLineData && (
         <>
           <div
             className="absolute flex items-center justify-center border border-highlight h-12 rounded-sm"
             style={{
-              left: getActiveTimeStart(hoverTimeTuple, timeWidth),
+              left: getActiveTimeStart(hoverTimeLineData, timeWidth),
               top: 0,
               width: tenMinWidth,
               fontSize: "10px",
             }}
             ref={hovTimeDisplayRef}
           >
-            <ButtonBase
-              sx={{ width: "100%", height: "100%" }}
-              // onClick={() => handleClickAddTime(hoverTimeTuple[0])}
-            >
+            <ButtonBase sx={{ width: "100%", height: "100%" }}>
               <div className="relative" style={{ width: 10, height: 10 }}>
                 <div
                   className="absolute bg-primary left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
@@ -131,80 +158,65 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
             }}
           ></div>
 
-          <div
-            className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
-            style={{ left: getActiveTimeStart(d, timeWidth) }}
-            {...thumbClicknDrag}
-            onMouseEnter={(e) => handleHoverOpen(e, d.start)}
-            onMouseLeave={handleHoverClose}
+          <Popover
+            content={
+              <div className="bg-background shadow-lg rounded-lg">
+                <TimePopup
+                  hourType="12"
+                  hour={dayjs.unix(d.start).get("hour")}
+                  minute={dayjs.unix(d.start).get("hour")}
+                />
+              </div>
+            }
+            placement="bottom"
+            trigger="click"
           >
-            <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
-          </div>
-          <div
-            className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
-            style={{ left: getActiveTimeEnd(d, timeWidth) }}
-            {...thumbClicknDrag}
-            onMouseEnter={(e) => handleHoverOpen(e, d.end)}
-            onMouseLeave={handleHoverClose}
+            <Popover
+              content={
+                <span className="p-2">
+                  {dayjs.unix(d.start).format("HH:mm")}
+                </span>
+              }
+              placement="top"
+            >
+              <div
+                className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+                style={{ left: getActiveTimeStart(d, timeWidth) }}
+              >
+                <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
+              </div>
+            </Popover>
+          </Popover>
+
+          <Popover
+            content={
+              <div className="bg-background shadow-lg rounded-lg">
+                <TimePopup
+                  hourType="12"
+                  hour={dayjs.unix(d.end).get("hour")}
+                  minute={dayjs.unix(d.end).get("hour")}
+                />
+              </div>
+            }
+            placement="bottom"
+            trigger="click"
           >
-            <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
-          </div>
+            <Popover
+              content={
+                <span className="p-2">{dayjs.unix(d.end).format("HH:mm")}</span>
+              }
+              placement="top"
+            >
+              <div
+                className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+                style={{ left: getActiveTimeEnd(d, timeWidth) }}
+              >
+                <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
+              </div>
+            </Popover>
+          </Popover>
         </div>
       ))}
-
-      <Popover
-        open={isDateOpen}
-        onClose={handleDateClose}
-        anchorEl={openDateAnchorEl}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-        sx={{
-          "& .MuiPaper-root": {
-            borderRadius: "20px",
-          },
-        }}
-      >
-        <TimePopup
-          hour={handleCurrentData[0]}
-          minute={handleCurrentData[1]}
-          hourType="12"
-        />
-      </Popover>
-      <Popover
-        sx={{
-          pointerEvents: "none",
-          "& .MuiPaper-root": {
-            backgroundColor: "transparent",
-            boxShadow: "none",
-          },
-        }}
-        open={isHoverOpen}
-        onClose={handleHoverClose}
-        anchorEl={hoverAnchorEl}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-      >
-        <span className="p-2">
-          {getTime(handleCurrentData).format("HH:mm")}
-        </span>
-      </Popover>
-      <SchedeulerAddModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        startNum={hoverTimeTuple}
-      />
     </div>
   );
 }

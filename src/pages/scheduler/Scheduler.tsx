@@ -1,7 +1,11 @@
 import { useState } from "react";
 
+import dayjs from "dayjs";
+
 import { Box } from "components/layouts";
 import { FilterInput } from "components/muiCustom";
+import { ActiveTime, TimeTuple } from "types/date";
+import { getUnix } from "utils/date";
 
 import { TimeLine } from "./components";
 
@@ -10,8 +14,9 @@ import type { TimeSchedulerType } from "./types";
 const dummyData: TimeSchedulerType[] = [
   {
     name: "디바이스 1",
+    key: "1",
     macAddress: "00:00:00:00:00",
-    activeTimes: [{ start: [0, 0, 0], end: [3, 0, 0] }],
+    activeTimes: [{ start: getUnix([0, 0, 0]), end: getUnix([3, 0, 0]) }],
     tags: [
       { label: "asd1", color: "#707070" },
       { label: "asd2", color: "#d1e3d6" },
@@ -20,21 +25,24 @@ const dummyData: TimeSchedulerType[] = [
   },
   {
     name: "디바이스 2",
+    key: "2",
     macAddress: "10:00:00:00:01",
     activeTimes: [
-      { start: [3, 30, 0], end: [6, 0, 0] },
-      { start: [7, 30, 0], end: [11, 0, 0] },
+      { start: getUnix([3, 30, 0]), end: getUnix([6, 0, 0]) },
+      { start: getUnix([7, 34, 0]), end: getUnix([11, 0, 0]) },
     ],
   },
   {
     name: "디바이스 3",
+    key: "3",
     macAddress: "20:00:00:00:02",
-    activeTimes: [{ start: [2, 0, 0], end: [4, 0, 0] }],
+    activeTimes: [{ start: getUnix([2, 0, 0]), end: getUnix([4, 0, 0]) }],
   },
   {
     name: "디바이스 4",
+    key: "4",
     macAddress: "30:00:00:00:03",
-    activeTimes: [{ start: [6, 0, 0], end: [7, 0, 0] }],
+    activeTimes: [{ start: getUnix([6, 0, 0]), end: getUnix([7, 0, 0]) }],
   },
 ];
 
@@ -57,12 +65,56 @@ const search = (data: TimeSchedulerType[], value: string) => {
   return result;
 };
 
+// function nonOverlapRanges = (arr:ActiveTime[]) => {
+//   arr.forEach(e => {
+//
+//   })
+// }
+
+// function checkOverlap(existingRanges: ActiveTime[], newRange: ActiveTime) {
+//   // Sort existing ranges by their start value
+//   existingRanges.sort((a, b) => getTime(a.start). - b.start);
+//
+//   for (const [start, end] of existingRanges) {
+//     // Check for overlap
+//     if (newRange[0] <= end && newRange[1] >= start) {
+//       return true; // Overlap found
+//     }
+//   }
+//   return false; // No overlap
+// }
+
 export default function Scheduler() {
   const [data, _] = useState<TimeSchedulerType[]>(dummyData);
   const [filterData, setFilterData] = useState<TimeSchedulerType[]>(data);
 
   const handleFilter = (value: string) => {
     setFilterData(search(dummyData, value));
+  };
+  // console.log(
+  //   findNonOverlappingRanges(data[1].activeTimes, [
+  //     dayjs().startOf("date").unix(),
+  //     dayjs().endOf("date").unix(),
+  //   ]),
+  // );
+
+  const addSchedule = (key: string, activeTime: ActiveTime) => {};
+
+  const changeSchedule = (
+    key: string,
+    index: number,
+    activeTime: Partial<ActiveTime>,
+  ) => {
+    const keyIndex = data.findIndex((e) => e.key === key);
+
+    if (!activeTime) return;
+    if (keyIndex < 0) return;
+
+    const curActiveTimes = data[keyIndex].activeTimes;
+    curActiveTimes[index] = {
+      ...curActiveTimes[index],
+      ...activeTime,
+    };
   };
 
   return (
