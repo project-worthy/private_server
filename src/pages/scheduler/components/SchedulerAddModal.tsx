@@ -8,7 +8,7 @@ import {
 import { Button, TimePicker } from "components/muiCustom";
 
 import type { DialogProps } from "@mui/material";
-import type { TimeTuple } from "types/date";
+import type { TimeTuple } from "utils/date";
 
 type SchedeulerAddModalProp = {
   startNum?: TimeTuple;

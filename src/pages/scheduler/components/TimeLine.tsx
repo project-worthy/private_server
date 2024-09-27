@@ -1,12 +1,12 @@
+import { useContext } from "react";
+
 import { locale } from "dayjs";
 
 import { Box } from "components/layouts";
 import useTimeInterval from "hooks/useTimeInterval";
 
-import TimeSchedulerDetail from "./TimeSchedulerDetail";
-import TimeSchedulerInfo from "./TimeSchedulerInfo";
-
-import type { TimeSchedulerType } from "../types";
+import { TimeScheduleDetail, TimeScheduleInfo } from ".";
+import { ScheduleDataContext } from "./ScheduleDataProvider";
 
 locale("ko");
 
@@ -14,12 +14,8 @@ const timeWidth = 64;
 
 const timeNumber: number[] = Array.from({ length: 25 }, (_, i) => i);
 
-type TimeLineProps = {
-  dataSource: TimeSchedulerType[];
-};
-
-export default function TimeLine(props: TimeLineProps) {
-  const { dataSource } = props;
+export default function TimeLine() {
+  const { data } = useContext(ScheduleDataContext);
   const markerPosX = useTimeInterval(timeWidth);
 
   return (
@@ -47,9 +43,9 @@ export default function TimeLine(props: TimeLineProps) {
                   boxShadow: "5px 0 5px -5px #333",
                 }}
               >
-                {dataSource.map((d, i) => (
+                {data?.map((d, i) => (
                   <>
-                    <TimeSchedulerInfo
+                    <TimeScheduleInfo
                       data={d}
                       key={`time-scheduler-info-${i}`}
                     />
@@ -61,9 +57,9 @@ export default function TimeLine(props: TimeLineProps) {
                   className="marker-timeline"
                   style={{ left: markerPosX }}
                 ></div>
-                {dataSource.map((d, i) => (
+                {data?.map((d, i) => (
                   <>
-                    <TimeSchedulerDetail
+                    <TimeScheduleDetail
                       data={d}
                       timeWidth={timeWidth}
                       key={`time-scheduler-detail-${i}`}

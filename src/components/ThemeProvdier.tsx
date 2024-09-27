@@ -7,7 +7,7 @@ import {
 
 import { useBodyClass } from "hooks";
 
-import type { childrenProps } from "types/default";
+import type { ReactNode } from "react";
 
 declare module "@mui/material/styles" {
   interface Theme {
@@ -143,10 +143,14 @@ theme = createTheme(theme, {
     },
   },
 });
+type ThemeProviderProps = {
+  children: ReactNode;
+};
 
 export const ThemeContext = createContext<"dark" | "light">("light");
 
-export default function ThemeProvider({ children }: childrenProps) {
+export default function ThemeProvider(props: ThemeProviderProps) {
+  const { children } = props;
   const [light, dark] = useBodyClass("light");
   if (
     localStorage.theme === "dark" ||

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 
 import { ButtonBase } from "@mui/material";
 
@@ -7,23 +7,21 @@ import isBetween from "dayjs/plugin/isBetween";
 
 import { TimePopup } from "components/muiCustom";
 import { Popover } from "components/muiCustom";
-import useMouseDetectClicknDrag, {
-  MouseState,
-} from "hooks/useMouseDetectClicknDrag";
+import useDragEvent from "hooks/useDrag";
+import useMouseDetectClicknDrag from "hooks/useMouseEvents";
 import {
   getActiveTimeStart,
   getActiveTimeEnd,
   getActiveTimeWidth,
-  getTime,
   convertPosToTime,
   getRatio,
-  getTuple,
   getSelectRange,
 } from "utils/date";
 
+import { ScheduleDataContext } from "./ScheduleDataProvider";
+
 import type { TimeSchedulerType } from "../types";
-// import type { MouseEvent } from "react";
-import type { ActiveTime, TimeTuple } from "types/date";
+import type { ActiveTime, ActiveTimeRange } from "utils/date";
 
 dayjs.extend(isBetween);
 type TimeSchedulerDetailProp = {
@@ -31,63 +29,41 @@ type TimeSchedulerDetailProp = {
   timeWidth?: number;
 };
 
-function getNonOverlappingRanges(
-  existingRanges: ActiveTime[],
-  totalRange: number[],
-): ActiveTime[] {
-  existingRanges.sort((a, b) => a.start - b.start);
-
-  const nonOverlappingRanges = [];
-  let currentStart = totalRange[0];
-
-  for (const { start, end } of existingRanges) {
-    if (currentStart < start) {
-      nonOverlappingRanges.push({ start: currentStart, end: start });
-    }
-    currentStart = Math.max(currentStart, end);
-  }
-  if (currentStart < totalRange[1]) {
-    nonOverlappingRanges.push({ start: currentStart, end: totalRange[1] });
-  }
-
-  return nonOverlappingRanges;
-}
-
 const totalRangeStart = dayjs().startOf("date").unix();
 const totalRangeEnd = dayjs().endOf("date").unix();
 
 export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const { data, timeWidth: _timeWidth } = props;
+  const schedule = useContext(ScheduleDataContext);
   const timeWidth = _timeWidth ?? 64;
 
   const [hoverTimeLineData, setHoverTimeLineData] = useState<
-    ActiveTime | false
+    ActiveTimeRange | false
   >(false);
-
-  const [schedulerEditOpen, setSchedulerEditOpen] = useState(false);
 
   const hovTimeDisplayRef = useRef<HTMLDivElement>(null);
 
   const tenMinWidth = getRatio("minute", timeWidth) * 60 * 60 * 10;
-  const dayStart = dayjs().startOf("date").unix();
-  const dayEnd = dayjs().endOf("date").unix();
-  const nonOverlap = getNonOverlappingRanges(data.activeTimes, [
-    dayStart,
-    dayEnd,
-  ]);
+
+  let editingKey = "";
 
   const handleTimeLinehovering = (e: MouseEvent) => {
     const { left } = (
       e.currentTarget as HTMLDivElement
     ).getBoundingClientRect();
-    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+    const curMouseUnix = convertPosToTime(e.clientX - left, timeWidth);
 
-    mousePosTime[1] = Math.floor(mousePosTime[1] / 10) * 10; // floor in nearest whole number
-    mousePosTime[2] = 0;
-    const startNum = getTime(mousePosTime);
+    const curMouseDay = dayjs.unix(curMouseUnix);
+    const currentMinute = curMouseDay.get("minute");
+    const minute = Math.floor(currentMinute / 10) * 10;
+    const absoluteTime = dayjs
+      .unix(curMouseUnix)
+      .set("minute", minute)
+      .set("second", 0);
+    // const startNum = getTime(mousePosTime);
     const totalRage: [number, number] = [totalRangeStart, totalRangeEnd];
     const showButton = getSelectRange(
-      startNum.unix(),
+      absoluteTime.unix(),
       data.activeTimes,
       tenMinWidth,
       totalRage,
@@ -97,29 +73,43 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   const handleTimeLineEnd = () => setHoverTimeLineData(false);
 
-  const [timeLineRef] = useMouseDetectClicknDrag<HTMLDivElement>({
+  const hanldeMouseDown = (e: MouseEvent) => {
+    const { left } = (
+      e.currentTarget as HTMLDivElement
+    ).getBoundingClientRect();
+    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+    // setStartDate(mousePosTime);
+    editingKey = schedule.add(data.key, {
+      start: mousePosTime,
+      end: mousePosTime,
+    });
+  };
+
+  const hanldeMouseDrag = (e: MouseEvent) => {
+    const { left } = (
+      e.currentTarget as HTMLDivElement
+    ).getBoundingClientRect();
+    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+    const editingIndex = data.activeTimes.findIndex(
+      (at) => at.key === editingKey,
+    );
+    if (editingIndex < 0) return;
+
+    schedule.change(data.key, editingKey, { end: mousePosTime });
+  };
+  const timeLineRef = useRef<HTMLDivElement>(null);
+
+  useMouseDetectClicknDrag(timeLineRef, {
     onHovering: handleTimeLinehovering,
     onHoverEnd: handleTimeLineEnd,
+    onMouseDown: hanldeMouseDown,
+    onDrag: hanldeMouseDrag,
   });
 
   useEffect(() => {}, []);
 
   return (
     <div className="h-12 relative mb-2" ref={timeLineRef}>
-      <div>
-        {nonOverlap.map((e, i) => (
-          <div
-            key={`able-drag-${data.key}-${i}`}
-            className="able-drag absolute h-12"
-            data-startDate={e.start}
-            data-endDate={e.end}
-            style={{
-              left: getActiveTimeStart(e, timeWidth),
-              width: getActiveTimeWidth(e, timeWidth),
-            }}
-          ></div>
-        ))}
-      </div>
       {hoverTimeLineData && (
         <>
           <div
@@ -138,7 +128,12 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
             }}
             ref={hovTimeDisplayRef}
           >
-            <ButtonBase sx={{ width: "100%", height: "100%" }}>
+            <ButtonBase
+              sx={{ width: "100%", height: "100%" }}
+              onClick={() => {
+                schedule.add(data.key, hoverTimeLineData);
+              }}
+            >
               <div className="relative" style={{ width: 10, height: 10 }}>
                 <div
                   className="absolute bg-primary left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
@@ -177,21 +172,22 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
             placement="bottom"
             trigger="click"
           >
-            <Popover
-              content={
-                <span className="p-2">
-                  {dayjs.unix(d.start).format("HH:mm")}
-                </span>
-              }
-              placement="top"
+            {/* <Popover */}
+            {/*   content={ */}
+            {/*     <span className="p-2"> */}
+            {/*       {dayjs.unix(d.start).format("HH:mm")} */}
+            {/*     </span> */}
+            {/*   } */}
+            {/*   placement="top" */}
+            {/*   className="pointer-events-none" */}
+            {/* > */}
+            <div
+              className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+              style={{ left: getActiveTimeStart(d, timeWidth) }}
             >
-              <div
-                className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
-                style={{ left: getActiveTimeStart(d, timeWidth) }}
-              >
-                <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
-              </div>
-            </Popover>
+              <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
+            </div>
+            {/* </Popover> */}
           </Popover>
 
           <Popover
@@ -209,9 +205,14 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           >
             <Popover
               content={
-                <span className="p-2">{dayjs.unix(d.end).format("HH:mm")}</span>
+                <span className="p-2 pointer-events-none">
+                  {dayjs.unix(d.end).format("HH:mm")}
+                </span>
               }
               placement="top"
+              sx={{
+                pointerEvents: "none",
+              }}
             >
               <div
                 className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"

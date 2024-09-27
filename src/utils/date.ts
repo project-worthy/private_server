@@ -2,7 +2,10 @@ import dayjs from "dayjs";
 
 import type { Dayjs, ManipulateType } from "dayjs";
 import type { TimeSchedulerType } from "pages/scheduler";
-import type { ActiveTime, TimeTuple } from "types/date";
+
+export type TimeTuple = [number, number, number];
+export type ActiveTime = { key: string } & ActiveTimeRange;
+export type ActiveTimeRange = { start: number; end: number };
 
 export const MINUTE = 60;
 
@@ -36,11 +39,9 @@ export const getActiveTimePosition = (data: ActiveTime) => {
   return { start, end };
 };
 
-export const convertPosToTime = (pos: number, width: number): TimeTuple => {
+export const convertPosToTime = (pos: number, width: number): number => {
   const todayStart = dayjs().startOf("date").unix();
-  const a = dayjs.unix(todayStart + (pos / (24 * width)) * DAY);
-
-  return getTuple(a);
+  return todayStart + (pos / (24 * width)) * DAY;
 };
 
 export const getActiveTimePositions = (data: TimeSchedulerType) =>
@@ -82,14 +83,14 @@ export const getRatio = (unit: ManipulateType, width: number) => {
 };
 
 const isBetween = (src: number, a: number, b: number) =>
-  src > Math.min(a, b) && src < Math.max(a, b);
+  src >= Math.min(a, b) && src <= Math.max(a, b);
 
 export const getSelectRange = (
   start: number,
   ranges: ActiveTime[],
   outputSize: number,
   totalRange: [number, number],
-): ActiveTime | false => {
+): ActiveTimeRange | false => {
   let _start = start;
   let end = start + outputSize;
   const endInRange = ranges.find((e) => isBetween(end, e.start, e.end));

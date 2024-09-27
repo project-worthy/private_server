@@ -1,5 +1,5 @@
 import type { TagType } from "components/muiCustom";
-import type { ActiveTime } from "types/date";
+import type { ActiveTime } from "utils/date";
 
 export type TimeSchedulerType = {
   name: string;
