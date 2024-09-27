@@ -80,3 +80,21 @@ export const getRatio = (unit: ManipulateType, width: number) => {
   const b = dayjs().add(1, unit);
   return ((b.unix() - a.unix()) / DAY) * width;
 };
+
+export const getSelectRange = (
+  start: number,
+  ranges: ActiveTime[],
+  outputSize: number,
+  totalRange: [number, number],
+) => {
+  let end = 0;
+  if (start < totalRange[0]) return false;
+  if (start > totalRange[1]) return false;
+  for (const r of ranges) {
+    end = start + outputSize;
+    if (start >= r.start && start <= r.end) return false;
+    if (end >= r.start && end <= r.end) end = r.start;
+  }
+  if (end) if (end > totalRange[1]) end = totalRange[1];
+  return [start, end];
+};
