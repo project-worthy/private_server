@@ -29,8 +29,8 @@ export const getTuple = (data: Dayjs): TimeTuple => [
 export const todayTuple = getTuple(today);
 
 export const getActiveTimePosition = (data: ActiveTime) => {
-  const start = getTimeRatio(getTime(data.start));
-  const end = getTimeRatio(getTime(data.end));
+  const start = getTimeRatio(dayjs.unix(data.start));
+  const end = getTimeRatio(dayjs.unix(data.end));
   return { start, end };
 };
 
@@ -79,3 +79,33 @@ export const getRatio = (unit: ManipulateType, width: number) => {
   const b = dayjs().add(1, unit);
   return ((b.unix() - a.unix()) / DAY) * width;
 };
+
+export const getRange = (
+  start: number,
+  ranges: ActiveTime[],
+  outputSize: number,
+  totalRange: [number, number],
+) => {
+  // Check if the start number is within any of the specified ranges
+  let end = 0;
+  if (start < totalRange[0]) return false;
+  if (start > totalRange[1]) return false;
+
+  for (const r of ranges) {
+    end = start + outputSize;
+    if (start >= r.start && start <= r.end) return false;
+    if (end >= r.start && end <= r.end) end = r.start;
+  }
+
+  if (end) if (end > totalRange[1]) end = totalRange[1]; // or handle as needed
+
+  return [start, end];
+};
+
+// // Example usage:
+// const ranges = [
+//   { start: 5, end: 10 },
+//   { start: 15, end: 20 },
+// ];
+// const result = getRange(6, ranges, 4, [3, 15]);
+// console.log(result); // Output: false
