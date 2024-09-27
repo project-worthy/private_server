@@ -36,7 +36,10 @@ const dummyData: TimeSchedulerType[] = [
     name: "디바이스 3",
     key: "3",
     macAddress: "20:00:00:00:02",
-    activeTimes: [{ start: getUnix([2, 0, 0]), end: getUnix([4, 0, 0]) }],
+    activeTimes: [
+      { start: getUnix([5, 30, 0]), end: getUnix([6, 0, 0]) },
+      { start: getUnix([7, 30, 0]), end: getUnix([11, 0, 0]) },
+    ],
   },
   {
     name: "디바이스 4",

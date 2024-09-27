@@ -17,10 +17,12 @@ import {
   getTime,
   convertPosToTime,
   getRatio,
+  getTuple,
+  getSelectRange,
 } from "utils/date";
 
 import type { TimeSchedulerType } from "../types";
-import type { MouseEvent } from "react";
+// import type { MouseEvent } from "react";
 import type { ActiveTime, TimeTuple } from "types/date";
 
 dayjs.extend(isBetween);
@@ -51,17 +53,22 @@ function getNonOverlappingRanges(
   return nonOverlappingRanges;
 }
 
+const totalRangeStart = dayjs().startOf("date").unix();
+const totalRangeEnd = dayjs().endOf("date").unix();
+
 export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const { data, timeWidth: _timeWidth } = props;
   const timeWidth = _timeWidth ?? 64;
 
-  const [hoverTimeLineData, setHoverTimeLineData] = useState<TimeTuple>();
+  const [hoverTimeLineData, setHoverTimeLineData] = useState<
+    ActiveTime | false
+  >(false);
 
   const [schedulerEditOpen, setSchedulerEditOpen] = useState(false);
 
   const hovTimeDisplayRef = useRef<HTMLDivElement>(null);
 
-  const tenMinWidth = getRatio("minute", timeWidth) * 24 * 10;
+  const tenMinWidth = getRatio("minute", timeWidth) * 60 * 60 * 10;
   const dayStart = dayjs().startOf("date").unix();
   const dayEnd = dayjs().endOf("date").unix();
   const nonOverlap = getNonOverlappingRanges(data.activeTimes, [
@@ -69,33 +76,26 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     dayEnd,
   ]);
 
-  const handleTimeLinehovering = (
-    e: MouseEvent<HTMLDivElement>,
-    { isDrag }: MouseState,
-  ) => {
-    const { left } = e.currentTarget.getBoundingClientRect();
+  const handleTimeLinehovering = (e: MouseEvent) => {
+    const { left } = (
+      e.currentTarget as HTMLDivElement
+    ).getBoundingClientRect();
     const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
-    if (
-      !nonOverlap.some((nonTime) =>
-        getTime(mousePosTime).isBetween(
-          dayjs.unix(nonTime.start),
-          dayjs.unix(nonTime.end),
-        ),
-      )
-    ) {
-      handleTimeLineEnd();
-      return;
-    }
-
-    if (isDrag) return;
 
     mousePosTime[1] = Math.floor(mousePosTime[1] / 10) * 10; // floor in nearest whole number
     mousePosTime[2] = 0;
-    setHoverTimeLineData(mousePosTime);
-    if (!schedulerEditOpen) setSchedulerEditOpen(true);
+    const startNum = getTime(mousePosTime);
+    const totalRage: [number, number] = [totalRangeStart, totalRangeEnd];
+    const showButton = getSelectRange(
+      startNum.unix(),
+      data.activeTimes,
+      tenMinWidth,
+      totalRage,
+    );
+    setHoverTimeLineData(showButton);
   };
 
-  const handleTimeLineEnd = () => setHoverTimeLineData(undefined);
+  const handleTimeLineEnd = () => setHoverTimeLineData(false);
 
   const [timeLineRef] = useMouseDetectClicknDrag<HTMLDivElement>({
     onHovering: handleTimeLinehovering,
@@ -120,14 +120,20 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           ></div>
         ))}
       </div>
-      {schedulerEditOpen && hoverTimeLineData && (
+      {hoverTimeLineData && (
         <>
           <div
             className="absolute flex items-center justify-center border border-highlight h-12 rounded-sm"
             style={{
-              left: getActiveTimeStart(hoverTimeLineData, timeWidth),
+              left: getActiveTimeStart(
+                hoverTimeLineData as ActiveTime,
+                timeWidth,
+              ),
               top: 0,
-              width: tenMinWidth,
+              width: getActiveTimeWidth(
+                hoverTimeLineData as ActiveTime,
+                timeWidth,
+              ),
               fontSize: "10px",
             }}
             ref={hovTimeDisplayRef}

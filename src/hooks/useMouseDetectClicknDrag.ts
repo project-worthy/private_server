@@ -6,20 +6,20 @@ export type MouseState = {
 };
 
 interface MouseDetectClicknDragProps<T> {
-  onClick?: (event: React.MouseEvent<T>) => void;
-  onDrag?: (event: React.MouseEvent<T>) => void;
-  onDragFinsih?: (event: React.MouseEvent<T>) => void;
-  onHovering?: (event: React.MouseEvent<T>, states: MouseState) => void;
-  onHoverStart?: (event: React.MouseEvent<T>, ...args: unknown[]) => void;
-  onHoverEnd?: (event: React.MouseEvent<T>, ...args: unknown[]) => void;
+  onClick?: (event: MouseEvent) => void;
+  onDrag?: (event: MouseEvent) => void;
+  onDragFinsih?: (event: MouseEvent) => void;
+  onHovering?: (event: MouseEvent) => void;
+  onHoverStart?: (event: MouseEvent) => void;
+  onHoverEnd?: (event: MouseEvent) => void;
 }
-interface MouseDetectClicknDrag<T> {
-  onMouseDown: (event: React.MouseEvent<T>) => void;
-  onMouseMove: (event: React.MouseEvent<T>) => void;
-  onMouseLeave: (event: React.MouseEvent<T>) => void;
-  onMouseEnter: (event: React.MouseEvent<T>) => void;
-  onMouseUp: (event: React.MouseEvent<T>) => void;
-}
+// interface MouseDetectClicknDrag<T> {
+//   onMouseDown: (event: React.MouseEvent<T>) => void;
+//   onMouseMove: (event: React.MouseEvent<T>) => void;
+//   onMouseLeave: (event: React.MouseEvent<T>) => void;
+//   onMouseEnter: (event: React.MouseEvent<T>) => void;
+//   onMouseUp: (event: React.MouseEvent<T>) => void;
+// }
 
 function assertIsNode(e: EventTarget | null): asserts e is Node {
   if (!e || !("nodeType" in e)) {
@@ -28,6 +28,7 @@ function assertIsNode(e: EventTarget | null): asserts e is Node {
 }
 
 const delta = 3;
+
 export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   props: MouseDetectClicknDragProps<T>,
 ): [RefObject<T>] {
@@ -41,25 +42,25 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   } = props;
 
   const isDrag = useRef(-1);
-  const [startPos, setStartPos] = useState<{ x: number; y: number }>();
+  const startMousesPos = useRef<{ x: number; y: number }>();
 
   const detectRef = useRef<T>(null);
 
   const handleMouseDown = (e: MouseEvent) => {
-    setStartPos({ x: e.pageX, y: e.pageY });
+    startMousesPos.current = { x: e.pageX, y: e.pageY };
     isDrag.current = 0;
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isDrag.current < 0) {
+      onHovering?.(e);
       console.log("hovering");
     }
-    console.log(isDrag.current, startPos);
-    if (startPos === undefined) {
+    if (startMousesPos.current === undefined) {
       return;
     }
-    const diffX = Math.abs(e.pageX - startPos.x);
-    const diffY = Math.abs(e.pageY - startPos.y);
+    const diffX = Math.abs(e.pageX - startMousesPos.current.x);
+    const diffY = Math.abs(e.pageY - startMousesPos.current.y);
     if ((isDrag.current === 0 && diffX >= delta) || diffY >= delta) {
       isDrag.current = 1;
       return;
@@ -70,15 +71,16 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   };
 
   const handleMouseUp = (e: MouseEvent) => {
-    if (!startPos) return;
-    const diffX = Math.abs(e.pageX - startPos.x);
-    const diffY = Math.abs(e.pageY - startPos.y);
-    if (diffX < delta && diffY < delta) {
+    if (!startMousesPos.current) return;
+    const diffX = Math.abs(e.pageX - startMousesPos.current.x);
+    const diffY = Math.abs(e.pageY - startMousesPos.current.y);
+    if (isDrag.current === 0 && diffX < delta && diffY < delta) {
       console.log("click");
     } else if (isDrag.current > 1) {
       console.log("dragFinish");
     }
     isDrag.current = -1;
+    startMousesPos.current = undefined;
   };
 
   const handleMouseEnter = (e: MouseEvent) => {
@@ -87,7 +89,8 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
 
   const handleMouseLeave = (e: MouseEvent) => {
     if (isDrag.current === 1) handleMouseUp(e);
-    setStartPos(undefined);
+    startMousesPos.current = undefined;
+    onHoverEnd?.(e);
     console.log("leave");
   };
 

@@ -81,20 +81,27 @@ export const getRatio = (unit: ManipulateType, width: number) => {
   return ((b.unix() - a.unix()) / DAY) * width;
 };
 
+const isBetween = (src: number, a: number, b: number) =>
+  src > Math.min(a, b) && src < Math.max(a, b);
+
 export const getSelectRange = (
   start: number,
   ranges: ActiveTime[],
   outputSize: number,
   totalRange: [number, number],
-) => {
-  let end = 0;
-  if (start < totalRange[0]) return false;
-  if (start > totalRange[1]) return false;
-  for (const r of ranges) {
-    end = start + outputSize;
-    if (start >= r.start && start <= r.end) return false;
-    if (end >= r.start && end <= r.end) end = r.start;
-  }
-  if (end) if (end > totalRange[1]) end = totalRange[1];
-  return [start, end];
+): ActiveTime | false => {
+  let _start = start;
+  let end = start + outputSize;
+  const endInRange = ranges.find((e) => isBetween(end, e.start, e.end));
+  const startInRange = ranges.find((e) => isBetween(_start, e.start, e.end));
+
+  if (_start < totalRange[0]) return false;
+  if (_start > totalRange[1]) return false;
+
+  if (endInRange !== undefined && startInRange !== undefined) return false;
+  if (startInRange) _start = startInRange.end;
+  if (endInRange) end = endInRange.start;
+  if (end > totalRange[1]) end = totalRange[1];
+
+  return { start: _start, end };
 };
