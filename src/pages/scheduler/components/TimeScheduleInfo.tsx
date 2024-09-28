@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 import {
   MoreHoriz as MoreHorizIcon,
@@ -9,6 +9,7 @@ import { Popover } from "@mui/material";
 
 import { Tags, Button, IconButton } from "components/muiCustom";
 
+import { ScheduleDataContext } from "./ScheduleDataProvider";
 import SchedeulerAddModal from "./SchedulerAddModal";
 
 import type { TimeSchedulerType } from "../types";
@@ -19,6 +20,7 @@ type TimeSchedulerInfoProp = {
 };
 
 export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
+  const schedule = useContext(ScheduleDataContext);
   const { data } = props;
 
   const [scheduleAddOpen, setScheduleAddOpen] = useState(false);
@@ -36,7 +38,10 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
     handlePopoverClose();
   };
 
-  const handleCloseScheduleModal = () => setScheduleAddOpen(false);
+  const handleCloseScheduleModal = (start: number, end: number) => {
+    schedule.add(data.key, { start, end });
+    setScheduleAddOpen(false);
+  };
 
   const handleCreateScheduleModal = () => {};
 
@@ -88,7 +93,7 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
 
       <SchedeulerAddModal
         open={scheduleAddOpen}
-        onClose={handleCloseScheduleModal}
+        onOk={handleCloseScheduleModal}
       />
     </>
   );

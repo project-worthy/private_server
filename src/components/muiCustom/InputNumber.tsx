@@ -43,6 +43,7 @@ export type InputNumberProps = {
   isInteger?: boolean;
   isFloat?: boolean;
   size?: "small" | "medium" | "large";
+  onChange?: (value: number) => void;
 };
 
 export default function InputNumber(props: InputNumberProps) {
@@ -53,6 +54,7 @@ export default function InputNumber(props: InputNumberProps) {
     min: _min,
     isInteger: _isInteger,
     size: _size,
+    onChange,
   } = props;
 
   const [onFocus, setOnFocus] = useState(false);
@@ -93,6 +95,7 @@ export default function InputNumber(props: InputNumberProps) {
     if (currentNum < min) currentNum = min;
 
     if (inputRef.current) inputRef.current.value = get2Digit(currentNum);
+    if (onChange) onChange(currentNum);
   };
 
   const handleNumberIncrease = (e: MouseEvent<HTMLButtonElement>) => {

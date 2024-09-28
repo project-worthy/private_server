@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 
@@ -10,11 +10,14 @@ export type TimePickerProps = {
   hourType: "12" | "24";
   period?: "AM" | "PM";
   size?: "small" | "medium" | "large";
+  onChange?: (hour: number, minute: number) => void;
 };
 
 export default function TimePicker(props: TimePickerProps) {
   const { period, hour, minute, hourType, size: _size } = props;
   const [amPm, setAmPm] = useState(period ?? "AM");
+  const [hourValue, setHourValue] = useState(hour ?? 0);
+  const [minuteValue, setMinuteValue] = useState(minute ?? 0);
 
   const sizeConfig = {
     small: 16,
@@ -22,6 +25,14 @@ export default function TimePicker(props: TimePickerProps) {
     large: 64,
   };
   const size = sizeConfig[_size ?? "medium"];
+
+  useEffect(() => {
+    if (amPm === "PM") {
+      props.onChange?.(hourValue + 12, minuteValue);
+    }
+
+    props.onChange?.(hourValue, minuteValue);
+  }, [amPm, hourValue, minuteValue]);
 
   return (
     <div className="flex flex-col items-center px-4 py-2">
@@ -42,9 +53,19 @@ export default function TimePicker(props: TimePickerProps) {
           <ToggleButton value={"PM"}>PM</ToggleButton>
         </ToggleButtonGroup>
 
-        <InputNumber defaultValue={hour} min={0} max={24} />
+        <InputNumber
+          defaultValue={hour}
+          min={0}
+          max={hourType === "12" ? 12 : 24}
+          onChange={(v) => setHourValue(v)}
+        />
         <span style={{ fontSize: size }}>:</span>
-        <InputNumber defaultValue={minute} min={0} max={60} />
+        <InputNumber
+          defaultValue={minute}
+          min={0}
+          max={60}
+          onChange={(v) => setMinuteValue(v)}
+        />
       </div>
     </div>
   );
