@@ -38,10 +38,12 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
     handlePopoverClose();
   };
 
-  const handleCloseScheduleModal = (start: number, end: number) => {
+  const handleOkScheduleModal = (start: number, end: number) => {
     schedule.add(data.key, { start, end });
     setScheduleAddOpen(false);
   };
+
+  const handleCloseScheduleModal = () => setScheduleAddOpen(false);
 
   const handleCreateScheduleModal = () => {};
 
@@ -93,7 +95,8 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
 
       <SchedeulerAddModal
         open={scheduleAddOpen}
-        onOk={handleCloseScheduleModal}
+        onClose={handleCloseScheduleModal}
+        onOk={handleOkScheduleModal}
       />
     </>
   );

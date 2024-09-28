@@ -53,6 +53,13 @@ export default function SchedeulerAddModal(props: SchedeulerAddModalProp) {
       </DialogContent>
       <DialogActions>
         <Button
+          variant="outlined"
+          onClick={(e) => onClose?.(e, "backdropClick")}
+          disableElevation
+        >
+          취소
+        </Button>
+        <Button
           variant="contained"
           onClick={() => onOk?.(startTime, endTime)}
           disableElevation

@@ -59,10 +59,9 @@ export default function Popover(props: PopoverProps) {
     <>
       <div className="muiCustom-popper-wrapper" ref={anchorRef}>
         {children}
-
         {
           <div
-            className="fixed w-lvw h-lvh top-0 left-0 z-30"
+            className="fixed w-lvw h-lvh top-0 left-0 "
             ref={wrapperRef}
             style={{
               visibility: isOpen && trigger === "click" ? "visible" : "hidden",
