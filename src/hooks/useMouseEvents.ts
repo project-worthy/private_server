@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 
+import { cursorTo } from "readline";
+
 import type { RefObject, DependencyList } from "react";
 
 export type MouseEventState = {
@@ -11,6 +13,8 @@ export type MouseEventState = {
 
 interface MouseDetectClicknDragOpts {
   delta?: number;
+  strict?: boolean;
+  except?: Array<string | RefObject<Element>>;
   onClick?: (event: MouseEvent, status: MouseEventState) => void;
   onDrag?: (event: MouseEvent, status: MouseEventState) => void;
   onDragFinsih?: (event: MouseEvent, status: MouseEventState) => void;
@@ -20,6 +24,18 @@ interface MouseDetectClicknDragOpts {
   onMouseDown?: (event: MouseEvent, status: MouseEventState) => void;
   onMouseUp?: (event: MouseEvent, status: MouseEventState) => void;
 }
+
+const isExcept = <T extends Element>(
+  dom: T,
+  excepts: MouseDetectClicknDragOpts["except"],
+) => {
+  if (excepts === undefined) return false;
+
+  return excepts.some((e) => {
+    if (typeof e === "string") return dom.classList.contains(e) ?? false;
+    else return dom.isSameNode(e.current) ?? false;
+  });
+};
 
 export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   ref: RefObject<T>,
@@ -36,6 +52,8 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
     onMouseUp,
     onMouseDown,
     delta = 3,
+    strict = false,
+    except = [],
   } = opts;
 
   enum MOUSESTATE {
@@ -68,18 +86,25 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
     mouseState.current = 0;
 
     setMouseDownPos(startMousePos.current);
-
-    console.log(states);
   };
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
+      const element = e.target as T;
+
+      if (strict && !ref.current?.isSameNode(element)) {
+        if (!isExcept(element, except)) {
+          handleMouseLeave(e);
+          return;
+        }
+      }
       if (mouseState.current < 0) {
         onHovering?.(e, states);
       }
       if (startMousePos.current === undefined) {
         return;
       }
+
       if (mouseState.current > 0) {
         setIsDrag(true);
         onDrag?.(e, states);
@@ -134,14 +159,14 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   };
 
   useEffect(() => {
-    ref.current?.addEventListener("mouseenter", handleMouseEnter);
-    ref.current?.addEventListener("mouseleave", handleMouseLeave);
+    ref.current?.addEventListener("mouseover", handleMouseEnter);
+    ref.current?.addEventListener("mouseout", handleMouseLeave);
     ref.current?.addEventListener("mousedown", handleMouseDown);
     ref.current?.addEventListener("mousemove", handleMouseMove);
     ref.current?.addEventListener("mouseup", handleMouseUp);
     return () => {
-      ref.current?.removeEventListener("mouseenter", handleMouseEnter);
-      ref.current?.removeEventListener("mouseleave", handleMouseLeave);
+      ref.current?.removeEventListener("mouseover", handleMouseEnter);
+      ref.current?.removeEventListener("mouseout", handleMouseLeave);
       ref.current?.removeEventListener("mousedown", handleMouseDown);
       ref.current?.removeEventListener("mousemove", handleMouseMove);
       ref.current?.removeEventListener("mouseup", handleMouseUp);

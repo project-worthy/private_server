@@ -90,8 +90,8 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
 
   const addSchedule = (key: string, activeTime: ActiveTimeRange) => {
     const keyIndex = data.findIndex((e) => e.key === key);
-    if (isActiveTimeIntersect(activeTime, data[keyIndex].activeTimes))
-      return null;
+    // if (isActiveTimeIntersect(activeTime, data[keyIndex].activeTimes))
+    //   return null;
     const newDatakey = uuidv4();
     const newData: ActiveTime = {
       ...activeTime,
@@ -124,8 +124,8 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
       ...activeTime,
     };
 
-    if (isActiveTimeIntersect(curActiveTimes[scheduleIndex], curActiveTimes))
-      return null;
+    // if (isActiveTimeIntersect(curActiveTimes[scheduleIndex], curActiveTimes))
+    //   return null;
     setFilterData([...data]);
   };
 

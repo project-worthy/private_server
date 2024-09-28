@@ -25,13 +25,13 @@ export default function TimeLine() {
           <div className="overflow-x-scroll h-full">
             <div className="w-full" style={{ marginLeft: "calc(25% + 1rem)" }}>
               <div className="inline-flex">
-                {timeNumber.map((v) => (
+                {timeNumber.map((v, i) => (
                   <div
                     className="py-2 sticky"
-                    key={"time" + v}
+                    key={`time-display-hour-${data}-${i}`}
                     style={{ width: timeWidth, left: "calc(25% + 1rem)" }}
                   >
-                    <span className="right-0 translate-x-1/2 bg-background text-primary border-l border-l-primary">
+                    <span className="right-0 translate-x-1/2 bg-background text-primary border-l border-l-primary pr-2">
                       {v}
                     </span>
                   </div>
@@ -44,12 +44,7 @@ export default function TimeLine() {
                 }}
               >
                 {data?.map((d, i) => (
-                  <>
-                    <TimeScheduleInfo
-                      data={d}
-                      key={`time-scheduler-info-${i}`}
-                    />
-                  </>
+                  <TimeScheduleInfo data={d} key={`time-scheduler-info-${i}`} />
                 ))}
               </div>
               <div className="mb-2 h-fit relative">
@@ -58,13 +53,11 @@ export default function TimeLine() {
                   style={{ left: markerPosX }}
                 ></div>
                 {data?.map((d, i) => (
-                  <>
-                    <TimeScheduleDetail
-                      data={d}
-                      timeWidth={timeWidth}
-                      key={`time-scheduler-detail-${i}`}
-                    />
-                  </>
+                  <TimeScheduleDetail
+                    data={d}
+                    timeWidth={timeWidth}
+                    key={`time-scheduler-detail-${i}`}
+                  />
                 ))}
               </div>
             </div>

@@ -54,6 +54,10 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     const { left } = (
       e.currentTarget as HTMLDivElement
     ).getBoundingClientRect();
+    // if (!(e.target as HTMLDivElement).classList.contains("timeline-props")) {
+    //   setHoverTimeLineData(false);
+    //   return;
+    // }
 
     const curMouseUnix = convertPosToTime(e.clientX - left, timeWidth);
 
@@ -100,9 +104,15 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     else {
       const start = data.activeTimes[editingIndex].pivot ?? 0;
       if (mousePosTime < pivotTime)
-        schedule.change(data.key, editingKey, { start: mousePosTime });
+        schedule.change(data.key, editingKey, {
+          start: mousePosTime,
+          end: pivotTime,
+        });
       else if (mousePosTime > start)
-        schedule.change(data.key, editingKey, { end: mousePosTime });
+        schedule.change(data.key, editingKey, {
+          end: mousePosTime,
+          start: pivotTime,
+        });
     }
   };
   const timeLineRef = useRef<HTMLDivElement>(null);
@@ -111,16 +121,18 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     onHovering: handleTimeLinehovering,
     onHoverEnd: handleTimeLineEnd,
     onDrag: hanldeMouseDrag,
+    strict: true,
+    except: ["timeline-props"],
   });
 
   useEffect(() => {}, []);
 
   return (
-    <div className="h-12 relative mb-2" ref={timeLineRef}>
+    <div className="timeline-props h-12 relative mb-2" ref={timeLineRef}>
       {hoverTimeLineData && (
         <>
           <div
-            className="absolute flex items-center justify-center border border-highlight h-12 rounded-sm"
+            className="absolute flex items-center justify-center border border-highlight h-12 rounded-sm timeline-props"
             style={{
               left: getActiveTimeStart(
                 hoverTimeLineData as ActiveTime,
@@ -136,12 +148,16 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
             ref={hovTimeDisplayRef}
           >
             <ButtonBase
+              className="timeline-props"
               sx={{ width: "100%", height: "100%" }}
               onClick={() => {
                 schedule.add(data.key, hoverTimeLineData);
               }}
             >
-              <div className="relative" style={{ width: 10, height: 10 }}>
+              <div
+                className="relative pointer-events-none"
+                style={{ width: 10, height: 10 }}
+              >
                 <div
                   className="absolute bg-primary left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
                   style={{ width: 8, height: 1 }}
@@ -194,10 +210,10 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
               }}
             >
               <div
-                className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+                className="thumb-button-root group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
                 style={{ left: getActiveTimeStart(d, timeWidth) }}
               >
-                <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
+                <div className="thumb-button absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center pointer-events-none"></div>
               </div>
             </Popover>
           </Popover>
@@ -230,7 +246,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
               }}
             >
               <div
-                className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+                className="thumb-button group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
                 style={{ left: getActiveTimeEnd(d, timeWidth) }}
               >
                 <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
