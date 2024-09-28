@@ -7,8 +7,9 @@ import isBetween from "dayjs/plugin/isBetween";
 
 import { TimePopup } from "components/muiCustom";
 import { Popover } from "components/muiCustom";
-import useDragEvent from "hooks/useDrag";
-import useMouseDetectClicknDrag from "hooks/useMouseEvents";
+import useMouseDetectClicknDrag, {
+  MouseEventState,
+} from "hooks/useMouseEvents";
 import {
   getActiveTimeStart,
   getActiveTimeEnd,
@@ -47,10 +48,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   let editingKey = "";
 
-  const handleTimeLinehovering = (e: MouseEvent) => {
+  const handleTimeLinehovering = (e: MouseEvent, o: MouseEventState) => {
     const { left } = (
       e.currentTarget as HTMLDivElement
     ).getBoundingClientRect();
+
     const curMouseUnix = convertPosToTime(e.clientX - left, timeWidth);
 
     const curMouseDay = dayjs.unix(curMouseUnix);
@@ -60,7 +62,6 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
       .unix(curMouseUnix)
       .set("minute", minute)
       .set("second", 0);
-    // const startNum = getTime(mousePosTime);
     const totalRage: [number, number] = [totalRangeStart, totalRangeEnd];
     const showButton = getSelectRange(
       absoluteTime.unix(),
@@ -73,36 +74,31 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   const handleTimeLineEnd = () => setHoverTimeLineData(false);
 
-  const hanldeMouseDown = (e: MouseEvent) => {
-    const { left } = (
-      e.currentTarget as HTMLDivElement
-    ).getBoundingClientRect();
-    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
-    // setStartDate(mousePosTime);
-    editingKey = schedule.add(data.key, {
-      start: mousePosTime,
-      end: mousePosTime,
-    });
-  };
+  const hanldeMouseDrag = (e: MouseEvent, o: MouseEventState) => {
+    const { mouseDownPos, isDrag } = o;
+    const htmlDiv = e.currentTarget as HTMLDivElement;
+    const activeTims = data.activeTimes;
+    const { left } = htmlDiv.getBoundingClientRect();
 
-  const hanldeMouseDrag = (e: MouseEvent) => {
-    const { left } = (
-      e.currentTarget as HTMLDivElement
-    ).getBoundingClientRect();
-    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
-    const editingIndex = data.activeTimes.findIndex(
-      (at) => at.key === editingKey,
-    );
-    if (editingIndex < 0) return;
+    if (Boolean(hoverTimeLineData) && isDrag) setHoverTimeLineData(false);
 
-    schedule.change(data.key, editingKey, { end: mousePosTime });
+    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+
+    const editingIndex = activeTims.findIndex((at) => at.key === editingKey);
+
+    if (editingIndex < 0) {
+      const mouseDownTime = convertPosToTime(mouseDownPos.x - left, timeWidth);
+      editingKey = schedule.add(data.key, {
+        start: mouseDownTime,
+        end: mouseDownTime,
+      });
+    } else schedule.change(data.key, editingKey, { end: mousePosTime });
   };
   const timeLineRef = useRef<HTMLDivElement>(null);
 
-  useMouseDetectClicknDrag(timeLineRef, {
+  useMouseDetectClicknDrag(timeLineRef, [], {
     onHovering: handleTimeLinehovering,
     onHoverEnd: handleTimeLineEnd,
-    onMouseDown: hanldeMouseDown,
     onDrag: hanldeMouseDrag,
   });
 
@@ -172,22 +168,24 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
             placement="bottom"
             trigger="click"
           >
-            {/* <Popover */}
-            {/*   content={ */}
-            {/*     <span className="p-2"> */}
-            {/*       {dayjs.unix(d.start).format("HH:mm")} */}
-            {/*     </span> */}
-            {/*   } */}
-            {/*   placement="top" */}
-            {/*   className="pointer-events-none" */}
-            {/* > */}
-            <div
-              className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
-              style={{ left: getActiveTimeStart(d, timeWidth) }}
+            <Popover
+              content={
+                <span className="p-2">
+                  {dayjs.unix(d.start).format("HH:mm")}
+                </span>
+              }
+              placement="top"
+              sx={{
+                pointerEvents: "none",
+              }}
             >
-              <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
-            </div>
-            {/* </Popover> */}
+              <div
+                className="group absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors"
+                style={{ left: getActiveTimeStart(d, timeWidth) }}
+              >
+                <div className="absolute group-hover:border-highlight group-hover:border-2 group-hover:bg-background size-3 rounded-lg translate-center"></div>
+              </div>
+            </Popover>
           </Popover>
 
           <Popover

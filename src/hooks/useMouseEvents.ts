@@ -1,32 +1,36 @@
-import { useEffect, useRef, RefObject, useCallback, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  RefObject,
+  useCallback,
+  useState,
+  useMemo,
+  DependencyList,
+} from "react";
 
-export type MouseState = {
+export type MouseEventState = {
   isDrag: boolean;
-  isClick: boolean;
+  isHover: boolean;
+  mouseUpPos: { x: number; y: number };
+  mouseDownPos: { x: number; y: number };
 };
 
-interface MouseDetectClicknDragProps {
-  onClick?: (event: MouseEvent) => void;
-  onDrag?: (event: MouseEvent) => void;
-  onDragFinsih?: (event: MouseEvent) => void;
-  onHovering?: (event: MouseEvent) => void;
-  onHoverStart?: (event: MouseEvent) => void;
-  onHoverEnd?: (event: MouseEvent) => void;
-  onMouseDown?: (event: MouseEvent) => void;
-  onMouseUp?: (event: MouseEvent) => void;
+interface MouseDetectClicknDragOpts {
+  delta?: number;
+  onClick?: (event: MouseEvent, status: MouseEventState) => void;
+  onDrag?: (event: MouseEvent, status: MouseEventState) => void;
+  onDragFinsih?: (event: MouseEvent, status: MouseEventState) => void;
+  onHovering?: (event: MouseEvent, status: MouseEventState) => void;
+  onHoverStart?: (event: MouseEvent, status: MouseEventState) => void;
+  onHoverEnd?: (event: MouseEvent, status: MouseEventState) => void;
+  onMouseDown?: (event: MouseEvent, status: MouseEventState) => void;
+  onMouseUp?: (event: MouseEvent, status: MouseEventState) => void;
 }
-
-// function assertIsNode(e: EventTarget | null): asserts e is Node {
-//   if (!e || !("nodeType" in e)) {
-//     throw new Error(`Node expected`);
-//   }
-// }
-
-const delta = 3;
 
 export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   ref: RefObject<T>,
-  props: MouseDetectClicknDragProps,
+  deps: DependencyList,
+  opts: MouseDetectClicknDragOpts,
 ) {
   const {
     onClick,
@@ -37,7 +41,8 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
     onHoverStart,
     onMouseUp,
     onMouseDown,
-  } = props;
+    delta = 3,
+  } = opts;
 
   // const isDrag = useRef(-1);
   enum MOUSESTATE {
@@ -46,28 +51,49 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
     DRAG,
   }
   const mouseState = useRef(MOUSESTATE.IDLE);
-  const startMousesPos = useRef<{ x: number; y: number }>();
+  const startMousePos = useRef<{ x: number; y: number }>();
+  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number }>();
+  const [mouseUpPos, setMouseUpPos] = useState<{ x: number; y: number }>();
+  const [isDrag, setIsDrag] = useState(false);
+  const [isHover, setIsHover] = useState(false);
+
+  const defaultPos = { x: 0, y: 0 };
+
+  const states = useMemo(
+    () => ({
+      mouseDownPos: mouseDownPos ?? defaultPos,
+      mouseUpPos: mouseUpPos ?? defaultPos,
+      isHover,
+      isDrag,
+    }),
+    [mouseDownPos, mouseUpPos, isHover, isDrag],
+  );
 
   const handleMouseDown = (e: MouseEvent) => {
-    onMouseDown?.(e);
-    startMousesPos.current = { x: e.pageX, y: e.pageY };
+    onMouseDown?.(e, states);
+    startMousePos.current = { x: e.pageX, y: e.pageY };
     mouseState.current = 0;
+
+    setMouseDownPos(startMousePos.current);
+
+    console.log(states);
   };
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (mouseState.current < 0) {
-        onHovering?.(e);
+        onHovering?.(e, states);
       }
-      if (startMousesPos.current === undefined) {
+      if (startMousePos.current === undefined) {
         return;
       }
       if (mouseState.current > 0) {
-        onDrag?.(e);
+        setIsDrag(true);
+        onDrag?.(e, states);
       }
 
-      const diffX = Math.abs(e.pageX - startMousesPos.current.x);
-      const diffY = Math.abs(e.pageY - startMousesPos.current.y);
+      const diffX = Math.abs(e.pageX - startMousePos.current.x);
+      const diffY = Math.abs(e.pageY - startMousePos.current.y);
       if ((mouseState.current === 0 && diffX >= delta) || diffY >= delta) {
         mouseState.current = 1;
         return;
@@ -78,35 +104,40 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      onMouseUp?.(e);
-      if (!startMousesPos.current) return;
-      const diffX = Math.abs(e.pageX - startMousesPos.current.x);
-      const diffY = Math.abs(e.pageY - startMousesPos.current.y);
+      setMouseUpPos({ x: e.pageX, y: e.pageY });
+      onMouseUp?.(e, states);
+      resetState();
+      if (!startMousePos.current) return;
+      const diffX = Math.abs(e.pageX - startMousePos.current.x);
+      const diffY = Math.abs(e.pageY - startMousePos.current.y);
       if (mouseState.current === 0 && diffX < delta && diffY < delta) {
-        onClick?.(e);
+        onClick?.(e, states);
       } else if (mouseState.current > 1) {
-        onDragFinsih?.(e);
+        onDragFinsih?.(e, states);
       }
       mouseState.current = -1;
-      startMousesPos.current = undefined;
+      startMousePos.current = undefined;
     },
     [onMouseUp, onClick, onDragFinsih],
   );
 
+  const resetState = () => {
+    setMouseUpPos(undefined);
+    setMouseDownPos(undefined);
+    setIsDrag(false);
+    setIsHover(true);
+  };
+
   const handleMouseEnter = (e: MouseEvent) => {
-    onHoverStart?.(e);
+    onHoverStart?.(e, states);
+    setIsHover(true);
   };
 
   const handleMouseLeave = (e: MouseEvent) => {
     if (mouseState.current === 1) handleMouseUp(e);
-    startMousesPos.current = undefined;
-    onHoverEnd?.(e);
-  };
-  const actions = {
-    mouseDown: handleMouseDown,
-    mouseUp: handleMouseUp,
-    mouseEnter: handleMouseEnter,
-    mouseLeave: handleMouseLeave,
+    startMousePos.current = undefined;
+    onHoverEnd?.(e, states);
+    setIsHover(false);
   };
 
   useEffect(() => {
@@ -122,7 +153,7 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
       ref.current?.removeEventListener("mousemove", handleMouseMove);
       ref.current?.removeEventListener("mouseup", handleMouseUp);
     };
-  }, []);
+  }, [...deps, mouseState.current]);
 
   // return {actions};
 }

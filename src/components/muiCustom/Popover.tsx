@@ -35,7 +35,6 @@ export default function Popover(props: PopoverProps) {
 
   useEffect(() => {
     const child = getChild(anchorRef.current);
-    console.log(trigger);
     if (trigger === "hover") {
       child?.addEventListener("mouseenter", handlePopoverOpen);
       child?.addEventListener("mouseleave", handlePopoverClose);
