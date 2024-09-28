@@ -2,23 +2,11 @@ import { useState } from "react";
 
 import { Add as AddIcon } from "@mui/icons-material";
 import { Autocomplete, IconButton, TextField } from "@mui/material";
-import { styled } from "@mui/material/styles";
-
-import { Box } from "components/layouts";
 
 import Icon from "./Icon";
 import Tag from "./Tag";
 
 import type { TagType } from "./Tag";
-
-const CustomAutocomplete = styled(Autocomplete<TagType, true>)(({ theme }) => ({
-  // "& .MuiAutocomplete-endAdornment": {
-  //   color: theme.color.primary,
-  // },
-  // "& .MuiInputBase-adornedEnd": {
-  //   color: "red", // Change clear icon color (affects entire adornment)
-  // },
-}));
 
 export type TagsProps = {
   data?: TagType[];
@@ -51,7 +39,7 @@ export default function Tags(props: TagsProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <CustomAutocomplete
+        <Autocomplete<TagType, true>
           multiple
           limitTags={2}
           id="multiple-limit-tags"

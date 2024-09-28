@@ -17,6 +17,7 @@ import {
   convertPosToTime,
   getRatio,
   getSelectRange,
+  getUnix,
 } from "utils/date";
 
 import { ScheduleDataContext } from "./ScheduleDataProvider";
@@ -47,6 +48,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const tenMinWidth = getRatio("minute", timeWidth) * 60 * 60 * 10;
 
   let editingKey = "";
+  let pivotTime = 0;
 
   const handleTimeLinehovering = (e: MouseEvent, o: MouseEventState) => {
     const { left } = (
@@ -92,7 +94,15 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
         start: mouseDownTime,
         end: mouseDownTime,
       });
-    } else schedule.change(data.key, editingKey, { end: mousePosTime });
+      pivotTime = mouseDownTime;
+    } //
+    else {
+      const start = data.activeTimes[editingIndex].pivot ?? 0;
+      if (mousePosTime < pivotTime)
+        schedule.change(data.key, editingKey, { start: mousePosTime });
+      else if (mousePosTime > start)
+        schedule.change(data.key, editingKey, { end: mousePosTime });
+    }
   };
   const timeLineRef = useRef<HTMLDivElement>(null);
 
@@ -162,6 +172,9 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                   hourType="12"
                   hour={dayjs.unix(d.start).get("hour")}
                   minute={dayjs.unix(d.start).get("hour")}
+                  onOk={(time) =>
+                    schedule.change(data.key, d.key, { start: getUnix(time) })
+                  }
                 />
               </div>
             }
@@ -170,7 +183,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           >
             <Popover
               content={
-                <span className="p-2">
+                <span className="p-2 pointer-events-none text-primary">
                   {dayjs.unix(d.start).format("HH:mm")}
                 </span>
               }
@@ -195,6 +208,9 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                   hourType="12"
                   hour={dayjs.unix(d.end).get("hour")}
                   minute={dayjs.unix(d.end).get("hour")}
+                  onOk={(time) =>
+                    schedule.change(data.key, d.key, { start: getUnix(time) })
+                  }
                 />
               </div>
             }
@@ -203,7 +219,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           >
             <Popover
               content={
-                <span className="p-2 pointer-events-none">
+                <span className="p-2 pointer-events-none text-primary">
                   {dayjs.unix(d.end).format("HH:mm")}
                 </span>
               }

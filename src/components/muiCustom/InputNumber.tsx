@@ -1,4 +1,4 @@
-import { KeyboardEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   ArrowDropUp as ArrowDropUpIcon,
@@ -7,7 +7,7 @@ import {
 import { IconButton, InputBase } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-import type { ChangeEvent, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 export const OutlinedInput = styled(InputBase)(({ theme }) => ({
   backgroundColor: theme.color.blend,

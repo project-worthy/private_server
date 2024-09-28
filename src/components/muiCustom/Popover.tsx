@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 
 import { Popper as MuiPopover } from "@mui/material";
 import { PopperProps as MuiPopperProps } from "@mui/material";
@@ -53,7 +53,8 @@ export default function Popover(props: PopoverProps) {
       child?.removeEventListener("click", handlePopoverOpen);
       wrapperRef.current?.removeEventListener("click", handlePopoverClose);
     };
-  }, []);
+  }, [trigger]);
+
   return (
     <>
       <div className="muiCustom-popper-wrapper" ref={anchorRef}>

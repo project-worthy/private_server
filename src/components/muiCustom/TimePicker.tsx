@@ -14,7 +14,7 @@ export type TimePickerProps = {
 };
 
 export default function TimePicker(props: TimePickerProps) {
-  const { period, hour, minute, hourType, size: _size } = props;
+  const { period, hour, minute, hourType, onChange, size: _size } = props;
   const [amPm, setAmPm] = useState(period ?? "AM");
   const [hourValue, setHourValue] = useState(hour ?? 0);
   const [minuteValue, setMinuteValue] = useState(minute ?? 0);
@@ -27,11 +27,8 @@ export default function TimePicker(props: TimePickerProps) {
   const size = sizeConfig[_size ?? "medium"];
 
   useEffect(() => {
-    if (amPm === "PM") {
-      props.onChange?.(hourValue + 12, minuteValue);
-    }
-
-    props.onChange?.(hourValue, minuteValue);
+    if (amPm === "PM") onChange?.(hourValue + 12, minuteValue);
+    else onChange?.(hourValue, minuteValue);
   }, [amPm, hourValue, minuteValue]);
 
   return (

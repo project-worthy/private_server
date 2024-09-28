@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { ToggleButtonGroup, ToggleButton, Button } from "@mui/material";
 
+import { TimeTuple } from "utils/date";
+
 import { TimePicker } from ".";
 
 export type TimePickerProps = {
@@ -9,14 +11,17 @@ export type TimePickerProps = {
   minute?: number;
   hourType: "12" | "24";
   period?: "AM" | "PM";
+  onOk?: (time: TimeTuple) => void;
 };
 export default function TimePopup(props: TimePickerProps) {
+  const { onOk, ...timePickerProp } = props;
   const [hourType, setHourType] = useState<TimePickerProps["hourType"]>("12");
+  const [time, setTime] = useState<TimeTuple>([0, 0, 0]);
 
   return (
     <div className="flex flex-col items-center px-4 py-2 ">
       <dl className="w-full flex justify-between items-center">
-        <dt>Enter Time</dt>
+        <dt className="text-primary">Enter Time</dt>
         <dd>
           <ToggleButtonGroup
             value={hourType}
@@ -36,10 +41,22 @@ export default function TimePopup(props: TimePickerProps) {
       </dl>
 
       <div className="flex items-center gap-x-2">
-        <TimePicker {...props} hourType={hourType} />
+        <TimePicker
+          {...timePickerProp}
+          hourType={hourType}
+          onChange={(hour, minute) => {
+            setTime([hour, minute, 0]);
+          }}
+        />
       </div>
       <div className="self-end">
-        <Button variant="contained" disableElevation>
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => {
+            onOk?.(time);
+          }}
+        >
           확인
         </Button>
       </div>

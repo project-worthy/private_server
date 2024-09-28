@@ -1,12 +1,6 @@
-import {
-  useEffect,
-  useRef,
-  RefObject,
-  useCallback,
-  useState,
-  useMemo,
-  DependencyList,
-} from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+
+import type { RefObject, DependencyList } from "react";
 
 export type MouseEventState = {
   isDrag: boolean;
@@ -44,7 +38,6 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
     delta = 3,
   } = opts;
 
-  // const isDrag = useRef(-1);
   enum MOUSESTATE {
     IDLE = -1,
     CLICK,
@@ -154,6 +147,4 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
       ref.current?.removeEventListener("mouseup", handleMouseUp);
     };
   }, [...deps, mouseState.current]);
-
-  // return {actions};
 }

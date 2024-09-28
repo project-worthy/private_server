@@ -4,7 +4,7 @@ import type { Dayjs, ManipulateType } from "dayjs";
 import type { TimeSchedulerType } from "pages/scheduler";
 
 export type TimeTuple = [number, number, number];
-export type ActiveTime = { key: string } & ActiveTimeRange;
+export type ActiveTime = { key: string; pivot?: number } & ActiveTimeRange;
 export type ActiveTimeRange = { start: number; end: number };
 
 export const MINUTE = 60;
@@ -106,3 +106,12 @@ export const getSelectRange = (
 
   return { start: _start, end };
 };
+
+export function isActiveTimeIntersect(
+  range: ActiveTimeRange,
+  ranges: ActiveTimeRange[],
+): boolean {
+  const { start, end } = range;
+
+  return ranges.some((r) => start <= r.start && end >= r.end);
+}
