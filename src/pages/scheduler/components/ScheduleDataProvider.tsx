@@ -3,7 +3,7 @@ import { createContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import useFetch from "hooks/useFetch";
-import { getUnix } from "utils/date";
+import { getUnix, isActiveTimeIntersect } from "utils/date";
 
 import type { TimeSchedulerType } from "../types";
 import type { ReactNode } from "react";
@@ -57,7 +57,7 @@ type ScheduleDataProviderProps = {
 
 type ScheduleDataContextType = {
   data: TimeSchedulerType[];
-  add: (key: string, activeTime: ActiveTimeRange) => string;
+  add: (key: string, activeTime: ActiveTimeRange) => string | null;
   change: (key: string, index: string, activeTime: Partial<ActiveTime>) => void;
   filter: (value: string) => void;
 };
@@ -90,6 +90,8 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
 
   const addSchedule = (key: string, activeTime: ActiveTimeRange) => {
     const keyIndex = data.findIndex((e) => e.key === key);
+    if (isActiveTimeIntersect(activeTime, data[keyIndex].activeTimes))
+      return null;
     const newDatakey = uuidv4();
     const newData: ActiveTime = {
       ...activeTime,
@@ -121,6 +123,9 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
       ...curActiveTimes[scheduleIndex],
       ...activeTime,
     };
+
+    if (isActiveTimeIntersect(curActiveTimes[scheduleIndex], curActiveTimes))
+      return null;
     setFilterData([...data]);
   };
 

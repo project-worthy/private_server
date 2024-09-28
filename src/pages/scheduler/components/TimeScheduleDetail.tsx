@@ -90,10 +90,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
     if (editingIndex < 0) {
       const mouseDownTime = convertPosToTime(mouseDownPos.x - left, timeWidth);
-      editingKey = schedule.add(data.key, {
-        start: mouseDownTime,
-        end: mouseDownTime,
-      });
+      editingKey =
+        schedule.add(data.key, {
+          start: mouseDownTime,
+          end: mouseDownTime,
+        }) ?? "";
       pivotTime = mouseDownTime;
     } //
     else {
@@ -171,7 +172,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                 <TimePopup
                   hourType="12"
                   hour={dayjs.unix(d.start).get("hour")}
-                  minute={dayjs.unix(d.start).get("hour")}
+                  minute={dayjs.unix(d.start).get("minute")}
                   onOk={(time) =>
                     schedule.change(data.key, d.key, { start: getUnix(time) })
                   }
@@ -207,7 +208,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                 <TimePopup
                   hourType="12"
                   hour={dayjs.unix(d.end).get("hour")}
-                  minute={dayjs.unix(d.end).get("hour")}
+                  minute={dayjs.unix(d.end).get("minute")}
                   onOk={(time) =>
                     schedule.change(data.key, d.key, { start: getUnix(time) })
                   }
