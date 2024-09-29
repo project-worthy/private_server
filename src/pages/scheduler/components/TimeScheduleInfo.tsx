@@ -5,7 +5,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
 } from "@mui/icons-material";
-import { Popover } from "@mui/material";
+import { Popover, Snackbar, SnackbarContent } from "@mui/material";
 
 import { Tags, Button, IconButton } from "components/muiCustom";
 
@@ -25,6 +25,7 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
 
   const [scheduleAddOpen, setScheduleAddOpen] = useState(false);
   const [openAnchorEl, setOpenAnchorEl] = useState<HTMLButtonElement>();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const isOpen = Boolean(openAnchorEl);
 
@@ -39,7 +40,9 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
   };
 
   const handleOkScheduleModal = (start: number, end: number) => {
-    schedule.add(data.key, { start, end });
+    const result = schedule.add(data.key, { start, end });
+    if (!result) setOpenSnackbar(true);
+
     setScheduleAddOpen(false);
   };
 
@@ -98,6 +101,17 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
         onClose={handleCloseScheduleModal}
         onOk={handleOkScheduleModal}
       />
+      <Snackbar
+        open={openSnackbar}
+        onClose={() => setOpenSnackbar(false)}
+        autoHideDuration={10000}
+        //
+      >
+        <SnackbarContent
+          message="스케줄러에 추가할 수 없습니다."
+          sx={{ backgroundColor: "#fff", color: "#000" }}
+        />
+      </Snackbar>
     </>
   );
 }

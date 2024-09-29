@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect, useContext } from "react";
 
-import { ButtonBase } from "@mui/material";
+import { ButtonBase, Snackbar } from "@mui/material";
 
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
 import { TimePopup } from "components/muiCustom";
 import { Popover } from "components/muiCustom";
-import useMouseDetectClicknDrag, {
-  MouseEventState,
-} from "hooks/useMouseEvents";
+import useMouseMouseEvents, { MouseEventState } from "hooks/useMouseEvents";
 import {
   getActiveTimeStart,
   getActiveTimeEnd,
@@ -42,6 +40,8 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
   const [hoverTimeLineData, setHoverTimeLineData] = useState<
     ActiveTimeRange | false
   >(false);
+  const [isStrict, setIsStrict] = useState(true);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const hovTimeDisplayRef = useRef<HTMLDivElement>(null);
 
@@ -54,11 +54,6 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     const { left } = (
       e.currentTarget as HTMLDivElement
     ).getBoundingClientRect();
-    // if (!(e.target as HTMLDivElement).classList.contains("timeline-props")) {
-    //   setHoverTimeLineData(false);
-    //   return;
-    // }
-
     const curMouseUnix = convertPosToTime(e.clientX - left, timeWidth);
 
     const curMouseDay = dayjs.unix(curMouseUnix);
@@ -86,6 +81,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
     const activeTims = data.activeTimes;
     const { left } = htmlDiv.getBoundingClientRect();
 
+    if (isStrict) {
+      setIsStrict(false);
+      return;
+    }
+
     if (Boolean(hoverTimeLineData) && isDrag) setHoverTimeLineData(false);
 
     const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
@@ -102,26 +102,39 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
       pivotTime = mouseDownTime;
     } //
     else {
-      const start = data.activeTimes[editingIndex].pivot ?? 0;
+      let newData = { start: 0, end: 0 };
       if (mousePosTime < pivotTime)
-        schedule.change(data.key, editingKey, {
+        newData = {
           start: mousePosTime,
           end: pivotTime,
-        });
-      else if (mousePosTime > start)
-        schedule.change(data.key, editingKey, {
+        };
+      else if (mousePosTime > pivotTime)
+        newData = {
           end: mousePosTime,
           start: pivotTime,
-        });
+        };
+
+      schedule.change(data.key, editingKey, newData);
     }
   };
+
+  const handleTimeLineDragEnd = () => {
+    const editingIndex = data.activeTimes.findIndex(
+      (at) => at.key === editingKey,
+    );
+    pivotTime = 0;
+    editingKey = "";
+    setIsStrict(true);
+  };
+
   const timeLineRef = useRef<HTMLDivElement>(null);
 
-  useMouseDetectClicknDrag(timeLineRef, [], {
+  useMouseMouseEvents(timeLineRef, [], {
     onHovering: handleTimeLinehovering,
     onHoverEnd: handleTimeLineEnd,
     onDrag: hanldeMouseDrag,
-    strict: true,
+    onDragFinsih: handleTimeLineDragEnd,
+    strict: isStrict,
     except: ["timeline-props"],
   });
 
@@ -155,7 +168,7 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
               }}
             >
               <div
-                className="relative pointer-events-none"
+                className="relative pointer-events-none [&_*]:pointer-events-none"
                 style={{ width: 10, height: 10 }}
               >
                 <div
@@ -225,9 +238,12 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
                   hourType="12"
                   hour={dayjs.unix(d.end).get("hour")}
                   minute={dayjs.unix(d.end).get("minute")}
-                  onOk={(time) =>
-                    schedule.change(data.key, d.key, { start: getUnix(time) })
-                  }
+                  onOk={(time) => {
+                    const result = schedule.change(data.key, d.key, {
+                      end: getUnix(time),
+                    });
+                    if (result) setOpenSnackbar(true);
+                  }}
                 />
               </div>
             }
@@ -255,6 +271,11 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
           </Popover>
         </div>
       ))}
+      <Snackbar
+        open={openSnackbar}
+        onClose={() => setOpenSnackbar(false)}
+        autoHideDuration={2000}
+      />
     </div>
   );
 }

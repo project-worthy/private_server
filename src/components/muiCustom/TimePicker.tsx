@@ -52,7 +52,7 @@ export default function TimePicker(props: TimePickerProps) {
 
         <InputNumber
           defaultValue={hour}
-          min={0}
+          min={hourType === "12" ? 1 : 0}
           max={hourType === "12" ? 12 : 24}
           onChange={(v) => setHourValue(v)}
         />

@@ -49,7 +49,7 @@ export default function TimeLine() {
               </div>
               <div className="mb-2 h-fit relative">
                 <div
-                  className="marker-timeline"
+                  className="marker-timeline pointer-events-none"
                   style={{ left: markerPosX }}
                 ></div>
                 {data?.map((d, i) => (

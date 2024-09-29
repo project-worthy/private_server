@@ -37,7 +37,7 @@ const isExcept = <T extends Element>(
   });
 };
 
-export default function useMouseDetectClicknDrag<T extends HTMLElement>(
+export default function useMouseMouseEvents<T extends HTMLElement>(
   ref: RefObject<T>,
   deps: DependencyList,
   opts: MouseDetectClicknDragOpts,
@@ -98,6 +98,7 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
           return;
         }
       }
+
       if (mouseState.current < 0) {
         onHovering?.(e, states);
       }
@@ -117,26 +118,26 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
         return;
       }
     },
-    [onHovering, onDrag],
+    [onHovering, onDrag, strict],
   );
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
       setMouseUpPos({ x: e.pageX, y: e.pageY });
       onMouseUp?.(e, states);
-      resetState();
       if (!startMousePos.current) return;
       const diffX = Math.abs(e.pageX - startMousePos.current.x);
       const diffY = Math.abs(e.pageY - startMousePos.current.y);
       if (mouseState.current === 0 && diffX < delta && diffY < delta) {
         onClick?.(e, states);
-      } else if (mouseState.current > 1) {
+      } else if (mouseState.current > 0) {
         onDragFinsih?.(e, states);
       }
       mouseState.current = -1;
       startMousePos.current = undefined;
+      resetState();
     },
-    [onMouseUp, onClick, onDragFinsih],
+    [onMouseUp, onClick, onDragFinsih, strict],
   );
 
   const resetState = () => {
@@ -159,17 +160,19 @@ export default function useMouseDetectClicknDrag<T extends HTMLElement>(
   };
 
   useEffect(() => {
-    ref.current?.addEventListener("mouseover", handleMouseEnter);
-    ref.current?.addEventListener("mouseout", handleMouseLeave);
+    const mousein = strict ? "mouseover" : "mouseenter";
+    const mouseout = strict ? "mouseout" : "mouseleave";
+    ref.current?.addEventListener(mousein, handleMouseEnter);
+    ref.current?.addEventListener(mouseout, handleMouseLeave);
     ref.current?.addEventListener("mousedown", handleMouseDown);
     ref.current?.addEventListener("mousemove", handleMouseMove);
     ref.current?.addEventListener("mouseup", handleMouseUp);
     return () => {
-      ref.current?.removeEventListener("mouseover", handleMouseEnter);
-      ref.current?.removeEventListener("mouseout", handleMouseLeave);
+      ref.current?.removeEventListener(mousein, handleMouseEnter);
+      ref.current?.removeEventListener(mouseout, handleMouseLeave);
       ref.current?.removeEventListener("mousedown", handleMouseDown);
       ref.current?.removeEventListener("mousemove", handleMouseMove);
       ref.current?.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [...deps, mouseState.current]);
+  }, [...deps, mouseState.current, strict]);
 }

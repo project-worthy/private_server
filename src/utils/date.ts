@@ -107,11 +107,23 @@ export const getSelectRange = (
   return { start: _start, end };
 };
 
-export function isActiveTimeIntersect(
+export function isActiveTimeIntersectAll(
   range: ActiveTimeRange,
   ranges: ActiveTimeRange[],
-): boolean {
+) {
+  // const { start, end } = range;
+
+  return ranges.some((r) => isActiveTimeIntersect(range, r));
+}
+
+export function isActiveTimeIntersect(
+  range: ActiveTimeRange,
+  cmp: ActiveTimeRange,
+) {
   const { start, end } = range;
 
-  return ranges.some((r) => start <= r.start && end >= r.end);
+  return (
+    (start <= cmp.end && start >= cmp.start) ||
+    (end <= cmp.end && end >= cmp.start)
+  );
 }

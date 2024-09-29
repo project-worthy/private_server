@@ -141,6 +141,13 @@ theme = createTheme(theme, {
         },
       },
     },
+    MuiSnackbar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: theme.color.background,
+        },
+      },
+    },
   },
 });
 type ThemeProviderProps = {

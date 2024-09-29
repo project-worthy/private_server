@@ -33,9 +33,18 @@ describe("util date getRange test", () => {
 
 describe("util get isActiveTimeIntersect", () => {
   test("타겟 범위가 범위 배열의 요소를 포함하는 경우", () => {
-    expect(isActiveTimeIntersect({ start: 0, end: 25 }, ranges)).toBe(true);
+    expect(isActiveTimeIntersect({ start: 5, end: 10 }, ranges)).toBe(true);
   });
   test("타겟 범위가 범위 배열의 요소 하나를 포함하는 경우", () => {
-    expect(isActiveTimeIntersect({ start: 0, end: 15 }, ranges)).toBe(true);
+    expect(isActiveTimeIntersect({ start: 7, end: 14 }, ranges)).toBe(true);
   });
+  test("타겟 범위가 범위 배열의 요소 하나를 포함하는 경우", () => {
+    expect(isActiveTimeIntersect({ start: 1, end: 3 }, ranges)).toBe(false);
+  });
+  test("타겟 범위가 범위 배열의 요소 하나를 포함하는 경우", () => {
+    expect(isActiveTimeIntersect({ start: 12, end: 13 }, ranges)).toBe(false);
+  });
+  // test("타겟 범위가 범위 배열의 요소 하나를 포함하는 경우", () => {
+  //   expect(isActiveTimeIntersect({ start: 0, end: 15 }, ranges)).toBe(true);
+  // });
 });

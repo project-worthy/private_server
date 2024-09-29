@@ -3,7 +3,11 @@ import { createContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import useFetch from "hooks/useFetch";
-import { getUnix, isActiveTimeIntersect } from "utils/date";
+import {
+  getUnix,
+  isActiveTimeIntersect,
+  isActiveTimeIntersectAll,
+} from "utils/date";
 
 import type { TimeSchedulerType } from "../types";
 import type { ReactNode } from "react";
@@ -58,7 +62,11 @@ type ScheduleDataProviderProps = {
 type ScheduleDataContextType = {
   data: TimeSchedulerType[];
   add: (key: string, activeTime: ActiveTimeRange) => string | null;
-  change: (key: string, index: string, activeTime: Partial<ActiveTime>) => void;
+  change: (
+    key: string,
+    index: string,
+    activeTime: Partial<ActiveTime>,
+  ) => boolean;
   filter: (value: string) => void;
 };
 
@@ -90,14 +98,15 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
 
   const addSchedule = (key: string, activeTime: ActiveTimeRange) => {
     const keyIndex = data.findIndex((e) => e.key === key);
-    // if (isActiveTimeIntersect(activeTime, data[keyIndex].activeTimes))
-    //   return null;
     const newDatakey = uuidv4();
     const newData: ActiveTime = {
       ...activeTime,
       key: newDatakey,
     };
+    if (isActiveTimeIntersectAll(newData, data[keyIndex].activeTimes))
+      return null;
     data[keyIndex].activeTimes.push(newData);
+    setFilterData([...data]);
     return newDatakey;
   };
 
@@ -115,18 +124,25 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
       (e) => e.key === scheduleKey,
     );
 
-    if (!activeTime) return;
-    if (keyIndex < 0) return;
+    if (!activeTime) return false;
+    if (keyIndex < 0) return false;
 
     const curActiveTimes = data[keyIndex].activeTimes;
-    curActiveTimes[scheduleIndex] = {
+    const newData = {
       ...curActiveTimes[scheduleIndex],
       ...activeTime,
     };
 
-    // if (isActiveTimeIntersect(curActiveTimes[scheduleIndex], curActiveTimes))
-    //   return null;
+    if (
+      data[keyIndex].activeTimes.some((e, i) => {
+        if (i !== scheduleIndex) return isActiveTimeIntersect(newData, e);
+        return false;
+      })
+    )
+      return false;
+    curActiveTimes[scheduleIndex] = newData;
     setFilterData([...data]);
+    return true;
   };
 
   const providerValue = {
