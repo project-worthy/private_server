@@ -1,18 +1,15 @@
-import { useContext } from "react";
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Navbar from "components/Navbar";
-import { ThemeContext } from "components/ThemeProvdier";
+import Test from "pages/Test";
 import cs from "utils/className";
 
 import Scheduler from "./pages/scheduler";
 
 function App() {
-  const theme = useContext(ThemeContext);
   return (
     <>
-      <div className={cs.join("flex flex-col w-full h-full", theme)}>
+      <div className={cs.join("flex flex-col w-full h-full bg-background")}>
         <Router>
           <Navbar />
           <section className="flex-1">
@@ -20,6 +17,7 @@ function App() {
               <Route path="/deviceMap" element={<Scheduler />}></Route>
               <Route path="/" element={<Scheduler />}></Route>
               <Route path="/settings" element={<Scheduler />}></Route>
+              <Route path="/test" element={<Test />}></Route>
             </Routes>
           </section>
         </Router>

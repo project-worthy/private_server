@@ -2,24 +2,11 @@ import { useState } from "react";
 
 import { Add as AddIcon } from "@mui/icons-material";
 import { Autocomplete, IconButton, TextField } from "@mui/material";
-import { styled } from "@mui/material/styles";
 
+import Icon from "./Icon";
 import Tag from "./Tag";
 
 import type { TagType } from "./Tag";
-
-const CustomAutocomplete = styled(Autocomplete<TagType, true>)(() => ({
-  "& .MuiOutlinedInput-root": {
-    borderRadius: 0,
-    border: "none",
-    "& fieldset": {
-      border: "none",
-    },
-  },
-  "& .MuiAutocomplete-popupIndicator": {
-    display: "none",
-  },
-}));
 
 export type TagsProps = {
   data?: TagType[];
@@ -52,14 +39,14 @@ export default function Tags(props: TagsProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <CustomAutocomplete
+        <Autocomplete<TagType, true>
           multiple
           limitTags={2}
           id="multiple-limit-tags"
           options={tagsOptions}
           defaultValue={data}
           onInputChange={(_, v) => handleInputChange(v)}
-          getOptionLabel={(o) => o.label ?? ""}
+          getOptionLabel={(o) => o.label}
           renderTags={(tags) => {
             return (
               <>
@@ -78,7 +65,9 @@ export default function Tags(props: TagsProps) {
         <IconButton
           onClick={() => onTagAdd?.({ label: inputValue, color: "#707070" })}
         >
-          <AddIcon />
+          <Icon>
+            <AddIcon />
+          </Icon>
         </IconButton>
       )}
     </div>

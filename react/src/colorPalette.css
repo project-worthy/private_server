@@ -1,15 +1,17 @@
-.light {
-  --background: 255, 255, 255;
-  --primary: 20, 20, 20;
-  --secondary: 83, 83, 83;
-  --highlight: 235, 202, 93;
-  --blend: 200, 200, 200;
-}
+:root {
+  .light {
+    --background: 255, 255, 255;
+    --primary: 20, 20, 20;
+    --secondary: 83, 83, 83;
+    --highlight: 235, 202, 93;
+    --blend: 240, 240, 240;
+  }
 
-.dark {
-  --background: 20, 20, 20;
-  --primary: 255, 255, 255;
-  --secondary: 238, 238, 238;
-  --highlight: 213, 189, 109;
-  --blend: 50, 50, 50;
+  .dark {
+    --background: 20, 20, 20;
+    --primary: 255, 255, 255;
+    --secondary: 238, 238, 238;
+    --highlight: 213, 189, 109;
+    --blend: 50, 50, 50;
+  }
 }

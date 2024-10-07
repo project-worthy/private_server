@@ -3,3 +3,7 @@ uvicorn
 pydantic
 python-jose
 python-multipart
+sqlalchemy
+aiomysql
+asyncmy
+cryptography

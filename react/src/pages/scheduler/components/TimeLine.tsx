@@ -1,46 +1,63 @@
-import { useState } from "react";
+import { useContext } from "react";
 
 import { locale } from "dayjs";
 
 import { Box } from "components/layouts";
+import useTimeInterval from "hooks/useTimeInterval";
 
-import TimeScheduler, { TimeSchedulerType } from "./TimeScheduler";
+import { TimeScheduleDetail, TimeScheduleInfo } from ".";
+import { ScheduleDataContext } from "./ScheduleDataProvider";
 
 locale("ko");
 
 const timeWidth = 64;
 
-const timeNumber: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
+const timeNumber: number[] = Array.from({ length: 25 }, (_, i) => i);
 
-type TimeLineProps = {
-  dataSource: TimeSchedulerType[];
-};
+export default function TimeLine() {
+  const { data } = useContext(ScheduleDataContext);
+  const markerPosX = useTimeInterval(timeWidth);
 
-export default function TimeLine(props: TimeLineProps) {
-  const { dataSource } = props;
-  // const [dataSource, _] = useState(dataSource);
   return (
     <>
       <Box className="h-full " items="start">
         <div className="relative w-full h-full">
           <div className="overflow-x-scroll h-full">
-            <div className="w-full ml-[25%]">
+            <div className="w-full" style={{ marginLeft: "calc(25% + 1rem)" }}>
               <div className="inline-flex">
-                {timeNumber.map((v) => (
+                {timeNumber.map((v, i) => (
                   <div
-                    className=" h-5 relative "
-                    key={"time" + v}
-                    style={{ width: timeWidth }}
+                    className="py-2 sticky"
+                    key={`time-display-hour-${data}-${i}`}
+                    style={{ width: timeWidth, left: "calc(25% + 1rem)" }}
                   >
-                    <span className="absolute right-0 translate-x-1/2 bg-background">
+                    <span className="right-0 translate-x-1/2 bg-background text-primary border-l border-l-primary pr-2">
                       {v}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="h-12">
-                {dataSource.map((d, i) => (
-                  <TimeScheduler data={d} key={`time-scheduler-${i}`} />
+              <div
+                className="absolute left-0 w-1/4 z-10"
+                style={{
+                  boxShadow: "5px 0 5px -5px #333",
+                }}
+              >
+                {data?.map((d, i) => (
+                  <TimeScheduleInfo data={d} key={`time-scheduler-info-${i}`} />
+                ))}
+              </div>
+              <div className="mb-2 h-fit relative">
+                <div
+                  className="marker-timeline"
+                  style={{ left: markerPosX }}
+                ></div>
+                {data?.map((d, i) => (
+                  <TimeScheduleDetail
+                    data={d}
+                    timeWidth={timeWidth}
+                    key={`time-scheduler-detail-${i}`}
+                  />
                 ))}
               </div>
             </div>

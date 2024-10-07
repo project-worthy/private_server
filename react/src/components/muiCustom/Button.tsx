@@ -4,7 +4,7 @@ import { styled } from "@mui/material/styles";
 import type { ButtonProps } from "@mui/material";
 
 export const CustomButton = styled(MuiButton)(({ theme }) => ({
-  color: theme.color.primary,
+  // color: theme.color.primary,
 }));
 
 export default function Button(props: ButtonProps) {

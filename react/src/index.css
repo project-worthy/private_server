@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .translate-center {
+    @apply left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+  .marker-timeline {
+    @apply absolute h-full w-[0.5px] bg-red-500 -translate-x-1/2 before:content-[''] before:size-2 before:rounded-lg before:absolute before:bg-red-500 before:-translate-x-1/2 before:-translate-y-full;
+  }
+
+  /* .thumb-button-root { */
+  /*   @apply absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-lg transition-colors z-20; */
+  /* } */
+  /* .thumb-button { */
+  /*   @apply absolute size-3 rounded-lg translate-center pointer-events-none; */
+  /* } */
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",

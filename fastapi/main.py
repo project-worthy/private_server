@@ -1,74 +1,128 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel as bm
-from typing import List
-from datetime import datetime as td, timedelta as dt, timezone as tz
-from jose import JWTError, jwt
+# main.py
 
-# JWT 토큰 인코딩/디코딩을 위한 비밀 키
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+import asyncio
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.future import select
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, Integer, String
+from pydantic import BaseModel
 
-app = FastAPI()
+# MySQL 데이터베이스 URL: asyncmy 사용
+DATABASE_URL = "mysql+asyncmy://root:1234@mysql:3306/iot_devices_db"
 
-# 토큰 기반 인증을 위한 OAuth2 스킴
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# 샘플 데이터 모델
-class Item(bm):
-    id: int
+engine = create_async_engine(DATABASE_URL, echo=True) # Async SQLAlchemy 엔진 생성
+SessionLocal = sessionmaker( # AsyncSession을 위한 세션 생성
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+)
+Base = declarative_base() # 베이스 클래스 생성 (모든 ORM 클래스가 이 클래스를 상속받음)
+app = FastAPI() # FastAPI 앱 생성
+
+
+# ORM 모델 정의 (IoT 장비 정보를 담는 테이블)
+class Device(Base):
+    __tablename__ = "devices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), index=True)
+    description = Column(String(255))
+    schedule = Column(String(255))
+
+
+# 데이터베이스 테이블 생성 함수 (재시도 기능 포함)
+async def init_db(delay=5):
+    while True:
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+                print("INFO:     Database connection successful and table creation complete.")
+                break  # 성공 시 루프 탈출
+
+        except Exception as e:
+            print(f"INFO:     Database connection failure. ({e})")
+            print(f"INFO:     Retrying in {delay} seconde...")
+            await asyncio.sleep(delay)  # 재시도 전 대기
+
+
+# 비동기 데이터베이스 세션 생성 함수
+async def get_db():
+    async with SessionLocal() as db:
+        try:
+            yield db
+
+        finally:
+            await db.close()
+
+
+class DeviceData(BaseModel):
     name: str
     description: str
+    schedule: str
 
-# 메모리 내 데이터베이스 시뮬레이션
-fake_items_db = [
-    {"id": 1, "name": "Item 1", "description": "Description for Item 1"},
-    {"id": 2, "name": "Item 2", "description": "Description for Item 2"},
-]
 
-# 토큰 생성 함수
-def create_access_token(data: dict, expires_delta: dt = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = td.now(tz=tz.utc) + expires_delta
-    else:
-        expire = td.now(tz=tz.utc) + dt(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+# 모든 디바이스 리스트 조회
+@app.get("/devices")
+async def read_devices(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Device).offset(skip).limit(limit))
+    devices = result.scalars().all()
+    return devices
 
-# 현재 사용자 정보를 가져오는 의존성
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="자격 증명을 확인할 수 없습니다.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user = payload.get("sub")
-        if user is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    return user
 
-# 로그인 엔드포인트: 토큰을 얻기 위한
-@app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # 간단히, 모든 사용자 이름/비밀번호로 토큰을 생성
-    access_token_expires = dt(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": form_data.username}, expires_delta=access_token_expires)
-    return {"access_token": access_token, "token_type": "bearer"}
+# 특정 디바이스 정보 조회
+@app.get("/devices/{device_id}")
+async def read_device(device_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Device).filter(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    return device
 
-# 인증이 필요한 아이템 조회 API 엔드포인트
-@app.get("/items/", response_model=List[Item])
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return fake_items_db
 
-# IoT 장비와의 통신을 위한 예제 엔드포인트
-@app.post("/device/")
-async def send_data_to_iot(data: Item, current_user: str = Depends(get_current_user)):
-    # 여기서 IoT 장비에 데이터를 전송하는 로직을 구현
-    return {"message": f"데이터가 IoT 장비에 전송되었습니다: {data.name}"}
+# 새로운 디바이스 추가
+@app.post("/create")
+async def create_device(device: DeviceData, db: AsyncSession = Depends(get_db)):
+    db_device = Device(name=device.name, description=device.description, schedule=device.schedule)
+    db.add(db_device)
+    await db.commit()
+    await db.refresh(db_device)
+    return db_device
+
+
+# 특정 디바이스 정보 수정
+@app.put("/update/{device_id}")
+async def update_device(device_id: int, device_update: DeviceData, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Device).filter(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    device.name = device_update.name
+    device.description = device_update.description
+    device.schedule = device_update.schedule
+    await db.commit()
+    await db.refresh(device)
+    return device
+
+
+# 특정 디바이스 삭제
+@app.delete("/remove/{device_id}")
+async def delete_device(device_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Device).filter(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    await db.delete(device)
+    await db.commit()
+    return {"message": "Device deleted successfully"}
+
+
+# 앱 시작 시 데이터베이스 초기화
+@app.on_event("startup")
+async def on_startup():
+    await init_db()
+
+# execute code: uvicorn main:app --host 0.0.0.0 --port 8000
