@@ -11,7 +11,7 @@ from sqlalchemy import Column, Integer, String
 from pydantic import BaseModel
 
 # MySQL 데이터베이스 URL: asyncmy 사용
-DATABASE_URL = "mysql+asyncmy://root:1234@mysql:3306/iot_devices_db"
+DATABASE_URL = "mysql+asyncmy://root:1234@mysql:3306/iot_device_db"
 
 
 engine = create_async_engine(DATABASE_URL, echo=True) # Async SQLAlchemy 엔진 생성
@@ -24,7 +24,7 @@ app = FastAPI() # FastAPI 앱 생성
 
 # ORM 모델 정의 (IoT 장비 정보를 담는 테이블)
 class Device(Base):
-    __tablename__ = "devices"
+    __tablename__ = "device"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), index=True)
@@ -65,9 +65,9 @@ async def get_db():
             await db.close()
 
 
-# 모든 디바이스 리스트 조회
-@app.get("/devices")
-async def read_devices(
+# 디바이스 리스트 조회
+@app.get("/device")
+async def search_device(
     request: Request,
     device_id: Optional[str] = None,
     skip: int = 0,
@@ -75,29 +75,44 @@ async def read_devices(
     db: AsyncSession = Depends(get_db)
 ):
     # 쿼리 파라미터가 있는지 확인
-    if request.query_params: # 쿼리 파라미터 유효성 검사
+    if request.query_params:
+        # 쿼리 파라미터 중에서 유효하지 않은 파라미터가 있는지 검사
         invalid_params = [param for param in request.query_params if param != "device_id" and param not in ["skip", "limit"]]
         if invalid_params:
             raise HTTPException(status_code=400, detail=f"Invalid query parameter(s): {', '.join(invalid_params)}")
 
-    if device_id: # '1,2,3' 형태로 들어온 문자열을 파싱하여 리스트로 변환
-        device_ids = [int(id) for id in device_id.split(",")]
+    device_ids = set()  # 중복을 피하기 위해 set 사용
+
+    if device_id:
+        # '1-3' 형태의 범위 쿼리 처리
+        ranges = device_id.split(",")
+        for range_str in ranges:
+            if '-' in range_str:  # 하이픈이 있을 경우
+                start, end = range_str.split('-')
+                try:
+                    start, end = int(start), int(end)
+                    device_ids.update(range(start, end + 1))  # start부터 end까지의 범위를 추가
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid range format. Use 'start-end'.")
+            else:  # 단일 ID 처리
+                try:
+                    device_ids.add(int(range_str))
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid device_id format.")
+
         # 여러 개의 디바이스 정보 조회
         result = await db.execute(select(Device).filter(Device.id.in_(device_ids)))
         devices = result.scalars().all()
         if not devices:
             raise HTTPException(status_code=404, detail="No devices found with the given IDs")
-        
         return devices
-    
     else:
         # 모든 디바이스 리스트 조회
         result = await db.execute(select(Device).offset(skip).limit(limit))
         devices = result.scalars().all()
         if not devices:
             return {"message": "Device not exist in Database"}
-        
-        return devices
+        return devices 
 
 # 새로운 디바이스 추가
 @app.post("/create")
