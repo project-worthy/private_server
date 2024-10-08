@@ -1,7 +1,7 @@
 # main.py
 
 import asyncio
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
@@ -41,8 +41,8 @@ async def init_db(delay=5):
                 break  # 성공 시 루프 탈출
 
         except Exception as e:
-            print(f"INFO:     Database connection failure. ({e})")
-            print(f"INFO:     Retrying in {delay} seconde...")
+            print(f"INFO:     Database connection failure. ({e})",
+                  f"INFO:     Retrying in {delay} seconde...")
             await asyncio.sleep(delay)  # 재시도 전 대기
 
 
@@ -56,6 +56,7 @@ async def get_db():
             await db.close()
 
 
+# 디바이스 정보 데이터
 class DeviceData(BaseModel):
     name: str
     description: str
@@ -118,6 +119,16 @@ async def delete_device(device_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(device)
     await db.commit()
     return {"message": "Device deleted successfully"}
+
+
+# IoT 디바이스 웹소켓 통신
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        print(f"Message received: {data}")
+        await websocket.send_text(f"Message text was: {data}")
 
 
 # 앱 시작 시 데이터베이스 초기화
