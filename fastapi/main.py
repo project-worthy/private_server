@@ -1,7 +1,8 @@
 # main.py
 
 import asyncio
-from fastapi import FastAPI, Depends, HTTPException, WebSocket
+from typing import Optional
+from fastapi import FastAPI, HTTPException, WebSocket, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
@@ -31,6 +32,13 @@ class Device(Base):
     schedule = Column(String(255))
 
 
+# 디바이스 정보 데이터
+class DeviceData(BaseModel):
+    name: str
+    description: str
+    schedule: str
+
+
 # 데이터베이스 테이블 생성 함수 (재시도 기능 포함)
 async def init_db(delay=5):
     while True:
@@ -38,11 +46,12 @@ async def init_db(delay=5):
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
                 print("INFO:     Database connection successful and table creation complete.")
+                
                 break  # 성공 시 루프 탈출
 
         except Exception as e:
-            print(f"INFO:     Database connection failure. ({e})",
-                  f"INFO:     Retrying in {delay} seconde...")
+            print(f"INFO:     Database connection failure. ({e})")
+            print(f"INFO:     Retrying in {delay} seconde...")
             await asyncio.sleep(delay)  # 재시도 전 대기
 
 
@@ -56,31 +65,39 @@ async def get_db():
             await db.close()
 
 
-# 디바이스 정보 데이터
-class DeviceData(BaseModel):
-    name: str
-    description: str
-    schedule: str
-
-
 # 모든 디바이스 리스트 조회
 @app.get("/devices")
-async def read_devices(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Device).offset(skip).limit(limit))
-    devices = result.scalars().all()
-    return devices
+async def read_devices(
+    request: Request,
+    device_id: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    # 쿼리 파라미터가 있는지 확인
+    if request.query_params: # 쿼리 파라미터 유효성 검사
+        invalid_params = [param for param in request.query_params if param != "device_id" and param not in ["skip", "limit"]]
+        if invalid_params:
+            raise HTTPException(status_code=400, detail=f"Invalid query parameter(s): {', '.join(invalid_params)}")
 
-
-# 특정 디바이스 정보 조회
-@app.get("/devices/{device_id}")
-async def read_device(device_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Device).filter(Device.id == device_id))
-    device = result.scalar_one_or_none()
-    if device is None:
-        raise HTTPException(status_code=404, detail="Device not found")
+    if device_id: # '1,2,3' 형태로 들어온 문자열을 파싱하여 리스트로 변환
+        device_ids = [int(id) for id in device_id.split(",")]
+        # 여러 개의 디바이스 정보 조회
+        result = await db.execute(select(Device).filter(Device.id.in_(device_ids)))
+        devices = result.scalars().all()
+        if not devices:
+            raise HTTPException(status_code=404, detail="No devices found with the given IDs")
+        
+        return devices
     
-    return device
-
+    else:
+        # 모든 디바이스 리스트 조회
+        result = await db.execute(select(Device).offset(skip).limit(limit))
+        devices = result.scalars().all()
+        if not devices:
+            return {"message": "Device not exist in Database"}
+        
+        return devices
 
 # 새로운 디바이스 추가
 @app.post("/create")
@@ -89,6 +106,7 @@ async def create_device(device: DeviceData, db: AsyncSession = Depends(get_db)):
     db.add(db_device)
     await db.commit()
     await db.refresh(db_device)
+
     return db_device
 
 
@@ -105,6 +123,7 @@ async def update_device(device_id: int, device_update: DeviceData, db: AsyncSess
     device.schedule = device_update.schedule
     await db.commit()
     await db.refresh(device)
+
     return device
 
 
@@ -118,6 +137,7 @@ async def delete_device(device_id: int, db: AsyncSession = Depends(get_db)):
     
     await db.delete(device)
     await db.commit()
+
     return {"message": "Device deleted successfully"}
 
 
