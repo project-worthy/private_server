@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - 3-tier
 
 jobs:
   build: # 배포 전 테스트
@@ -47,7 +47,7 @@ jobs:
   deploy: # 테스트 후 배포
     runs-on: ubuntu-22.04  # 우분투 20 이상
     needs: build
-    if: github.ref == 'refs/heads/main'  # main 브랜치에서만 배포
+    if: github.ref == 'refs/heads/3-tier'  # main 브랜치에서만 배포
 
     steps:
       - name: Check out code
