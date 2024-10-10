@@ -17,7 +17,7 @@ async def init_db(delay=5):
                 print("INFO:     Database connection successful and table creation complete.")
                 break
         except Exception as e:
-            print(f"INFO:     Database connection failure. ({e})")
+            print(f"INFO:     Database connection failure. \n{e}")
             print(f"INFO:     Retrying in {delay} seconds...")
             await asyncio.sleep(delay)
 
