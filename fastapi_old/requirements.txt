@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-pydantic
-python-jose
-python-multipart
-sqlalchemy
-asyncmy
-cryptography
