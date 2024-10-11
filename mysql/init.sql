@@ -15,9 +15,17 @@ CREATE TABLE IF NOT EXISTS device (
 
 -- 샘플 데이터 삽입
 INSERT INTO device (name, description, schedule) VALUES 
-('Device 1', 'First IoT device description', '11:10-22:20'),
-('Device 2', 'Second IoT device description', '22:20-9:30'),
-('Device 3', 'Third IoT device description', '9:30-23:20');
+('Device 01', 'First IoT device description',   '11:10-22:20'),
+('Device 02', 'Second IoT device description',  '22:20-09:30'),
+('Device 03', 'Third IoT device description',   '09:30-23:20'),
+('Device 04', 'Fourth IoT device description',  '06:00-18:00'),
+('Device 05', 'Fifth IoT device description',   '08:00-20:00'),
+('Device 06', 'Sixth IoT device description',   '12:00-21:00'),
+('Device 07', 'Seventh IoT device description', '05:00-17:00'),
+('Device 08', 'Eighth IoT device description',  '07:30-19:30'),
+('Device 09', 'Ninth IoT device description',   '10:00-22:00'),
+('Device 10', 'Tenth IoT device description',   '13:00-23:00');
+
 
 -- root 사용자 비밀번호 설정
 ALTER USER 'root'@'%' IDENTIFIED BY '1234';
