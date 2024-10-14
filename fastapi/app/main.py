@@ -79,33 +79,42 @@ async def verify_token_route(token: str = Depends(OAuth2PasswordBearer(tokenUrl=
 # Dictionary to track connected IoT devices
 connected_iot_devices = {}
 
-# IoT Device Namespace ("/iot")
-@sio.on("connect", namespace="/iot")
-async def connect_iot(sid, environ):
+# IoT device namespace handlers
+@sio.event(namespace="/iot")
+async def connect(sid, environ):
     device_id = environ.get('HTTP_DEVICE_ID')  # Get device ID from headers
     connected_iot_devices[device_id] = sid     # Track the device's socket ID
     print(f"IoT Device {device_id} connected with SID {sid}.")
 
-@sio.on("disconnect", namespace="/iot")
-async def disconnect_iot(sid):
+@sio.event(namespace="/iot")
+async def disconnect(sid):
     device_id = next((key for key, value in connected_iot_devices.items() if value == sid), None)
     if device_id:
         del connected_iot_devices[device_id]
-    print(f"IoT Device {device_id} disconnected.")
+    print(f"IoT Device {device_id} disconnected.", flush=True)
 
 @sio.on("iot_event", namespace="/iot")
 async def iot_event(sid, data):
-    print(f"Received data from IoT Device {sid}: {data}")
-    # Handle data from IoT device if necessary
+    print(f"INFO:     Received data from IoT Device {sid}: {data}", flush=True)
+    await sio.emit("iot_event", "Test", namespace="/iot")
+
+# Example of emitting data to all connected devices
+# async def broadcast_to_all_devices(event, message):
+#     for sid in connected_iot_devices.items():
+#         await sio.emit(event, message, to=sid, namespace="/iot")
 
 # AI Server Namespace ("/ai")
-@sio.on("connect", namespace="/ai")
+@sio.event(namespace="/ai")
 async def connect_ai(sid, environ):
-    print(f"AI Server {sid} connected.")
+    print(f"AI Server {sid} connected.", flush=True)
+
+@sio.event(namespace="/ai")
+async def disconnect_ai(sid):
+    print(f"AI Server {sid} disconnected.", flush=True)
 
 @sio.on("ai_event", namespace="/ai")
 async def ai_event(sid, data):
-    print(f"Received command from AI Server {sid}: {data}")
+    print(f"Received command from AI Server {sid}: {data}", flush=True)
     
     # Extract target IoT device and command from data
     target_device_id = data.get("device_id")
@@ -117,13 +126,9 @@ async def ai_event(sid, data):
         
         # Send command to the specified IoT device
         await sio.emit("iot_command", {"command": command}, room=target_sid, namespace="/iot")
-        print(f"Sent command to IoT Device {target_device_id}: {command}")
+        print(f"Sent command to IoT Device {target_device_id}: {command}", flush=True)
     else:
-        print(f"IoT Device {target_device_id} is not connected.")
-
-@sio.on("disconnect", namespace="/ai")
-async def disconnect_ai(sid):
-    print(f"AI Server {sid} disconnected.")
+        print(f"IoT Device {target_device_id} is not connected.", flush=True)
 
 # Mount SocketIO app at "/ws" for WebSocket communication
 app.mount("/ws", socket_app)

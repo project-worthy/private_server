@@ -14,11 +14,11 @@ async def init_db(delay=5):
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-                print("INFO:     Database connection successful and table creation complete.")
+                print("INFO:     Database connection successful and table creation complete.", flush=True)
                 break
         except Exception as e:
-            print(f"INFO:     Database connection failure. \n{e}")
-            print(f"INFO:     Retrying in {delay} seconds...")
+            print(f"INFO:     Database connection failure. \n{e}", flush=True)
+            print(f"INFO:     Retrying in {delay} seconds...", flush=True)
             await asyncio.sleep(delay)
 
 async def get_db():
