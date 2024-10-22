@@ -4,8 +4,8 @@ services:
   react:
     build:
       context: ./react
-    hostname: react
-    container_name: react
+    hostname: react_
+    container_name: react_
     ports:
       - "3000:3000"
     environment:
@@ -18,31 +18,30 @@ services:
   fastapi:
     build:
       context: ./fastapi
-    hostname: fastapi
-    container_name: fastapi
-    ports:
-      - "8000:8000"
-    # volumes:
-    #   - .:/app
+    hostname: fastapi_
+    container_name: fastapi_
+    volumes:
+      - ./fastapi/app:/app
     environment:
       - TZ=Asia/Seoul 
       - ENVIRONMENT=development
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
+    network_mode: "host"
+    # ports: # IoT 장비와 통신 오류 발생 (도커 네트워크와 호환성 문제 예상)
+    #   - "8000:8000"
 
   # db
   mysql:
     build:
         context: ./mysql
-    container_name: mysql
-    ports:
-      - "3306:3306"
-    hostname: mysql       
+    hostname: mysql_
+    container_name: mysql_
     privileged: true
     environment: 
-      - TZ=Asia/Seoul 
-    # volumes:
-    #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - TZ=Asia/Seoul
     restart: always
+    ports:
+      - "3306:3306"    
 
 # DB와 WAS는 volume을 따로 할당하여 배포 과정 도중 고객 데이터 손실 방지
