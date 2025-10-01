@@ -68,6 +68,9 @@ type ScheduleDataContextType = {
     activeTime: Partial<ActiveTime>,
   ) => boolean;
   filter: (value: string) => void;
+  delete: (key: string, scheduleKey: string) => void;
+  deviceAdd: (device: TimeSchedulerType) => void;
+  deviceDelete: (key: string) => void;
 };
 
 const isNameMatch = (data: TimeSchedulerType, value: string) =>
@@ -114,6 +117,25 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
     setFilterData(search(data, value));
   };
 
+  const deleteSchedule = (key: string, scheduleKey: string) => {
+    const keyIndex = data.findIndex((e) => e.key === key);
+    const scheduleIndex = data[keyIndex].activeTimes.findIndex(
+      (e) => e.key === scheduleKey,
+    );
+    if (keyIndex < 0) return false;
+    data[keyIndex].activeTimes.splice(scheduleIndex, 1);
+    setFilterData([...data]);
+  };
+
+  const deleteDeivce = (key: string) => {
+    const keyIndex = data.findIndex((e) => e.key === key);
+    if (keyIndex < 0) return false;
+    data.splice(keyIndex, 1);
+    setFilterData([...data]);
+  };
+
+  const addDevice = (device: TimeSchedulerType) => {};
+
   const changeSchedule = (
     key: string,
     scheduleKey: string,
@@ -150,6 +172,9 @@ export default function ScheduleDataProvider(props: ScheduleDataProviderProps) {
     add: addSchedule,
     change: changeSchedule,
     filter: fileterSchedule,
+    delete: deleteSchedule,
+    deviceAdd: addDevice,
+    deviceDelete: deleteDeivce,
   };
 
   return (

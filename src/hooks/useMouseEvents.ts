@@ -11,18 +11,54 @@ export type MouseEventState = {
   mouseDownPos: { x: number; y: number };
 };
 
+export type MouseEventActions = {
+  mouseleave: (event: MouseEvent) => void;
+};
+
 interface MouseDetectClicknDragOpts {
   delta?: number;
   strict?: boolean;
   except?: Array<string | RefObject<Element>>;
-  onClick?: (event: MouseEvent, status: MouseEventState) => void;
-  onDrag?: (event: MouseEvent, status: MouseEventState) => void;
-  onDragFinsih?: (event: MouseEvent, status: MouseEventState) => void;
-  onHovering?: (event: MouseEvent, status: MouseEventState) => void;
-  onHoverStart?: (event: MouseEvent, status: MouseEventState) => void;
-  onHoverEnd?: (event: MouseEvent, status: MouseEventState) => void;
-  onMouseDown?: (event: MouseEvent, status: MouseEventState) => void;
-  onMouseUp?: (event: MouseEvent, status: MouseEventState) => void;
+  onClick?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onDrag?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onDragFinsih?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onHovering?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onHoverStart?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onHoverEnd?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onMouseDown?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
+  onMouseUp?: (
+    event: MouseEvent,
+    status: MouseEventState,
+    actions: MouseEventActions,
+  ) => void;
 }
 
 const isExcept = <T extends Element>(
@@ -70,18 +106,8 @@ export default function useMouseMouseEvents<T extends HTMLElement>(
 
   const defaultPos = { x: 0, y: 0 };
 
-  const states = useMemo(
-    () => ({
-      mouseDownPos: mouseDownPos ?? defaultPos,
-      mouseUpPos: mouseUpPos ?? defaultPos,
-      isHover,
-      isDrag,
-    }),
-    [mouseDownPos, mouseUpPos, isHover, isDrag],
-  );
-
   const handleMouseDown = (e: MouseEvent) => {
-    onMouseDown?.(e, states);
+    onMouseDown?.(e, states, actions);
     startMousePos.current = { x: e.pageX, y: e.pageY };
     mouseState.current = 0;
 
@@ -100,7 +126,7 @@ export default function useMouseMouseEvents<T extends HTMLElement>(
       }
 
       if (mouseState.current < 0) {
-        onHovering?.(e, states);
+        onHovering?.(e, states, actions);
       }
       if (startMousePos.current === undefined) {
         return;
@@ -108,7 +134,7 @@ export default function useMouseMouseEvents<T extends HTMLElement>(
 
       if (mouseState.current > 0) {
         setIsDrag(true);
-        onDrag?.(e, states);
+        onDrag?.(e, states, actions);
       }
 
       const diffX = Math.abs(e.pageX - startMousePos.current.x);
@@ -124,14 +150,14 @@ export default function useMouseMouseEvents<T extends HTMLElement>(
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
       setMouseUpPos({ x: e.pageX, y: e.pageY });
-      onMouseUp?.(e, states);
+      onMouseUp?.(e, states, actions);
       if (!startMousePos.current) return;
       const diffX = Math.abs(e.pageX - startMousePos.current.x);
       const diffY = Math.abs(e.pageY - startMousePos.current.y);
       if (mouseState.current === 0 && diffX < delta && diffY < delta) {
-        onClick?.(e, states);
+        onClick?.(e, states, actions);
       } else if (mouseState.current > 0) {
-        onDragFinsih?.(e, states);
+        onDragFinsih?.(e, states, actions);
       }
       mouseState.current = -1;
       startMousePos.current = undefined;
@@ -148,16 +174,31 @@ export default function useMouseMouseEvents<T extends HTMLElement>(
   };
 
   const handleMouseEnter = (e: MouseEvent) => {
-    onHoverStart?.(e, states);
+    onHoverStart?.(e, states, actions);
     setIsHover(true);
   };
 
   const handleMouseLeave = (e: MouseEvent) => {
     if (mouseState.current === 1) handleMouseUp(e);
     startMousePos.current = undefined;
-    onHoverEnd?.(e, states);
+    onHoverEnd?.(e, states, actions);
     setIsHover(false);
   };
+  const states = useMemo(
+    () => ({
+      mouseDownPos: mouseDownPos ?? defaultPos,
+      mouseUpPos: mouseUpPos ?? defaultPos,
+      isHover,
+      isDrag,
+    }),
+    [mouseDownPos, mouseUpPos, isHover, isDrag],
+  );
+  const actions = useMemo(
+    () => ({
+      mouseleave: handleMouseLeave,
+    }),
+    [strict],
+  );
 
   useEffect(() => {
     const mousein = strict ? "mouseover" : "mouseenter";

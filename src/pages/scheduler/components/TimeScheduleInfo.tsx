@@ -48,6 +48,11 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
 
   const handleCloseScheduleModal = () => setScheduleAddOpen(false);
 
+  const handleDeleteDevice = () => {
+    handlePopoverClose();
+    schedule.deviceDelete(data.key);
+  };
+
   const handleCreateScheduleModal = () => {};
 
   return (
@@ -85,7 +90,11 @@ export default function TimeSchedulerInfo(props: TimeSchedulerInfoProp) {
               <Button variant="text" startIcon={<EditIcon />}>
                 수정
               </Button>
-              <Button variant="text" startIcon={<DeleteIcon />}>
+              <Button
+                variant="text"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteDevice}
+              >
                 삭제
               </Button>
               <div>

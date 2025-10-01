@@ -7,7 +7,10 @@ import isBetween from "dayjs/plugin/isBetween";
 
 import { TimePopup } from "components/muiCustom";
 import { Popover } from "components/muiCustom";
-import useMouseMouseEvents, { MouseEventState } from "hooks/useMouseEvents";
+import useMouseMouseEvents, {
+  MouseEventActions,
+  MouseEventState,
+} from "hooks/useMouseEvents";
 import {
   getActiveTimeStart,
   getActiveTimeEnd,
@@ -47,10 +50,10 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   const tenMinWidth = getRatio("minute", timeWidth) * 60 * 60 * 10;
 
-  let editingKey = "";
-  let pivotTime = 0;
+  const editingKey = "";
+  const pivotTime = 0;
 
-  const handleTimeLinehovering = (e: MouseEvent, o: MouseEventState) => {
+  const handleTimeLinehovering = (e: MouseEvent) => {
     const { left } = (
       e.currentTarget as HTMLDivElement
     ).getBoundingClientRect();
@@ -75,65 +78,65 @@ export default function TimeSchedulerDetail(props: TimeSchedulerDetailProp) {
 
   const handleTimeLineEnd = () => setHoverTimeLineData(false);
 
-  const hanldeMouseDrag = (e: MouseEvent, o: MouseEventState) => {
-    const { mouseDownPos, isDrag } = o;
-    const htmlDiv = e.currentTarget as HTMLDivElement;
-    const activeTims = data.activeTimes;
-    const { left } = htmlDiv.getBoundingClientRect();
-
-    if (isStrict) {
-      setIsStrict(false);
-      return;
-    }
-
-    if (Boolean(hoverTimeLineData) && isDrag) setHoverTimeLineData(false);
-
-    const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
-
-    const editingIndex = activeTims.findIndex((at) => at.key === editingKey);
-
-    if (editingIndex < 0) {
-      const mouseDownTime = convertPosToTime(mouseDownPos.x - left, timeWidth);
-      editingKey =
-        schedule.add(data.key, {
-          start: mouseDownTime,
-          end: mouseDownTime,
-        }) ?? "";
-      pivotTime = mouseDownTime;
-    } //
-    else {
-      let newData = { start: 0, end: 0 };
-      if (mousePosTime < pivotTime)
-        newData = {
-          start: mousePosTime,
-          end: pivotTime,
-        };
-      else if (mousePosTime > pivotTime)
-        newData = {
-          end: mousePosTime,
-          start: pivotTime,
-        };
-
-      schedule.change(data.key, editingKey, newData);
-    }
-  };
-
-  const handleTimeLineDragEnd = () => {
-    const editingIndex = data.activeTimes.findIndex(
-      (at) => at.key === editingKey,
-    );
-    pivotTime = 0;
-    editingKey = "";
-    setIsStrict(true);
-  };
+  // const hanldeMouseDrag = (e: MouseEvent, o: MouseEventState) => {
+  //   const { mouseDownPos, isDrag } = o;
+  //   const htmlDiv = e.currentTarget as HTMLDivElement;
+  //   const activeTims = data.activeTimes;
+  //   const { left } = htmlDiv.getBoundingClientRect();
+  //
+  //   if (isStrict) {
+  //     setIsStrict(false);
+  //     return;
+  //   }
+  //
+  //   if (Boolean(hoverTimeLineData) && isDrag) setHoverTimeLineData(false);
+  //
+  //   const mousePosTime = convertPosToTime(e.clientX - left, timeWidth);
+  //
+  //   const editingIndex = activeTims.findIndex((at) => at.key === editingKey);
+  //
+  //   if (editingIndex < 0) {
+  //     const mouseDownTime = convertPosToTime(mouseDownPos.x - left, timeWidth);
+  //     editingKey =
+  //       schedule.add(data.key, {
+  //         start: mouseDownTime,
+  //         end: mouseDownTime,
+  //       }) ?? "";
+  //     pivotTime = mouseDownTime;
+  //   } //
+  //   else {
+  //     let newData = { start: 0, end: 0 };
+  //     if (mousePosTime < pivotTime)
+  //       newData = {
+  //         start: mousePosTime,
+  //         end: pivotTime,
+  //       };
+  //     else if (mousePosTime > pivotTime)
+  //       newData = {
+  //         end: mousePosTime,
+  //         start: pivotTime,
+  //       };
+  //
+  //     schedule.change(data.key, editingKey, newData);
+  //   }
+  // };
+  //
+  // const handleTimeLineDragEnd = () => {
+  //   const editingIndex = data.activeTimes.findIndex(
+  //     (at) => at.key === editingKey,
+  //   );
+  //   pivotTime = 0;
+  //   editingKey = "";
+  //   setIsStrict(true);
+  // };
 
   const timeLineRef = useRef<HTMLDivElement>(null);
 
   useMouseMouseEvents(timeLineRef, [], {
     onHovering: handleTimeLinehovering,
     onHoverEnd: handleTimeLineEnd,
-    onDrag: hanldeMouseDrag,
-    onDragFinsih: handleTimeLineDragEnd,
+    // onDrag: hanldeMouseDrag,
+    // onDragFinsih: handleTimeLineDragEnd,
     strict: isStrict,
     except: ["timeline-props"],
   });

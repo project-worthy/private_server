@@ -14,12 +14,12 @@ export default function Navbar() {
       >
         스케줄러
       </NavLink>
-      <NavLink
-        to={"/settings"}
-        className={({ isActive }) => (isActive ? "font-bold" : "")}
-      >
-        권한설정
-      </NavLink>
+      {/* <NavLink */}
+      {/*   to={"/settings"} */}
+      {/*   className={({ isActive }) => (isActive ? "font-bold" : "")} */}
+      {/* > */}
+      {/*   권한설정 */}
+      {/* </NavLink> */}
     </nav>
   );
 }
